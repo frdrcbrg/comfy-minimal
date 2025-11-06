@@ -19,6 +19,10 @@ target "common" {
 target "regular" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
+  args = {
+    CUDA_VERSION = "12-4"
+    START_SCRIPT = "start.sh"
+  }
   tags = [
     "${IMAGE_REF}:${TAG}",
     "${IMAGE_REF}:latest",
@@ -29,6 +33,10 @@ target "regular" {
 target "dev" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
+  args = {
+    CUDA_VERSION = "12-4"
+    START_SCRIPT = "start.sh"
+  }
   tags = ["${IMAGE_REF}:dev"]
   output = ["type=docker"]
 }
@@ -37,20 +45,29 @@ target "dev" {
 target "devpush" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
+  args = {
+    CUDA_VERSION = "12-4"
+    START_SCRIPT = "start.sh"
+  }
   tags = ["${IMAGE_REF}:dev"]
 }
 
 target "devpush5090" {
   inherits = ["common"]
-  dockerfile = "Dockerfile.5090"
+  dockerfile = "Dockerfile"
+  args = {
+    CUDA_VERSION = "12-8"
+    START_SCRIPT = "start.5090.sh"
+  }
   tags = ["${IMAGE_REF}:dev-5090"]
 }
 
 # RTX 5090 optimized image (CUDA 12.8 + latest PyTorch build)
 target "rtx5090" {
   inherits = ["common"]
-  dockerfile = "Dockerfile.5090"
+  dockerfile = "Dockerfile"
   args = {
+    CUDA_VERSION = "12-8"
     START_SCRIPT = "start.5090.sh"
   }
   tags = [

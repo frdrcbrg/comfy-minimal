@@ -1,5 +1,9 @@
 FROM ubuntu:22.04
 
+# Build arguments for variant configuration
+ARG CUDA_VERSION=12-4
+ARG START_SCRIPT=start.sh
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
@@ -40,7 +44,7 @@ RUN apt-get update && \
     && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb \
     && dpkg -i cuda-keyring_1.1-1_all.deb \
     && apt-get update \
-    && apt-get install -y --no-install-recommends cuda-minimal-build-12-4 \
+    && apt-get install -y --no-install-recommends cuda-minimal-build-${CUDA_VERSION} \
     && apt-get install -y --no-install-recommends ffmpeg \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -69,8 +73,8 @@ WORKDIR /workspace/runpod-slim
 # Expose ports
 EXPOSE 8188 22 8080
 
-# Copy and set up start script
-COPY start.sh /start.sh
+# Copy and set up start script (variant-specific)
+COPY ${START_SCRIPT} /start.sh
 RUN chmod +x /start.sh
 
 # Set Python 3.12 as default

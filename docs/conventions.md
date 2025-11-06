@@ -15,11 +15,10 @@ This document outlines how to work in this repository from a developer point of 
 
 ## Repository Layout
 
-- `Dockerfile` – Regular image (CUDA 12.4)
-- `Dockerfile.5090` – RTX 5090 image (CUDA 12.8 + PyTorch cu128)
-- `start.sh` – Runtime bootstrap for regular image
-- `start.5090.sh` – Runtime bootstrap for 5090 image
-- `docker-bake.hcl` – Buildx bake targets (`regular`, `dev`, `rtx5090`)
+- `Dockerfile` – Unified Dockerfile with build args for both variants (CUDA 12.4 and 12.8)
+- `start.sh` – Runtime bootstrap for regular image (CUDA 12.4)
+- `start.5090.sh` – Runtime bootstrap for RTX 5090 image (CUDA 12.8 + PyTorch cu128)
+- `docker-bake.hcl` – Buildx bake targets (`regular`, `dev`, `rtx5090`) with variant-specific build args
 - `README.md` – User-facing overview
 - `docs/conventions.md` – This document
 
@@ -34,15 +33,15 @@ At runtime, the container uses:
 Use Docker Buildx Bake with the provided HCL file.
 
 - `regular` (default production):
-  - Dockerfile: `Dockerfile`
+  - Dockerfile: `Dockerfile` (with `CUDA_VERSION=12-4`, `START_SCRIPT=start.sh`)
   - Tag: `ghcr.io/frdrcbrg/comfy-minimal:${TAG}` (defaults to `latest`)
   - Platform: `linux/amd64`
 - `dev` (local testing):
-  - Dockerfile: `Dockerfile`
+  - Dockerfile: `Dockerfile` (with `CUDA_VERSION=12-4`, `START_SCRIPT=start.sh`)
   - Tag: `ghcr.io/frdrcbrg/comfy-minimal:dev`
   - Output: local docker image (not pushed)
 - `rtx5090` (CUDA 12.8 + latest torch):
-  - Dockerfile: `Dockerfile.5090`
+  - Dockerfile: `Dockerfile` (with `CUDA_VERSION=12-8`, `START_SCRIPT=start.5090.sh`)
   - Tag: `ghcr.io/frdrcbrg/comfy-minimal:${TAG}-5090`
 
 Example commands:
@@ -62,7 +61,10 @@ Build args and env:
 
 - `TAG` variable in `docker-bake.hcl` controls the tag suffix (default `latest`).
 - `IMAGE_REF` variable in `docker-bake.hcl` controls the image repository (default `ghcr.io/frdrcbrg/comfy-minimal`).
+- `CUDA_VERSION` build arg controls which CUDA toolkit to install (`12-4` or `12-8`).
+- `START_SCRIPT` build arg controls which startup script to use (`start.sh` or `start.5090.sh`).
 - Build uses BuildKit inline cache.
+- Unified Dockerfile enables efficient layer caching - both variants share ~95% of layers, significantly reducing CI/CD build times.
 
 ## Runtime Behavior
 

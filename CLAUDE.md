@@ -76,14 +76,18 @@ docker run --rm -p 8188:8188 -p 8080:8080 -p 2222:22 \
 
 ### Two Image Variants
 
-1. **Regular** (`Dockerfile`, `start.sh`):
+Built from a unified `Dockerfile` with build args for efficient layer caching:
+
+1. **Regular** (`Dockerfile` with `CUDA_VERSION=12-4`, `start.sh`):
    - CUDA 12.4 with stable PyTorch from upstream requirements
    - Venv at `/workspace/runpod-slim/ComfyUI/.venv`
 
-2. **RTX 5090** (`Dockerfile.5090`, `start.5090.sh`):
+2. **RTX 5090** (`Dockerfile` with `CUDA_VERSION=12-8`, `start.5090.sh`):
    - CUDA 12.8 with PyTorch Nightly cu128 wheels
    - Venv at `/workspace/runpod-slim/ComfyUI/.venv-cu128`
    - Masks torch-related lines in ComfyUI requirements.txt and installs explicit cu128 wheels
+
+Both variants share ~95% of Docker layers, significantly reducing build times in CI/CD.
 
 ### Runtime Bootstrap Flow
 

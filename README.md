@@ -205,9 +205,21 @@ The following model directories are automatically symlinked:
 
 Example: Download models to `/workspace/models/checkpoints` and they'll be automatically available in ComfyUI.
 
+## Persistent Workflow Storage
+
+The container automatically sets up persistent workflow storage at `/workspace/workflows` with a symlink to ComfyUI's workflow directory:
+
+- **All workflows stored in `/workspace/workflows` will survive container restarts**
+- Workflows are automatically accessible within ComfyUI
+- You can mount `/workspace` as a volume to persist workflows between containers
+- The workflow directory is symlinked to `ComfyUI/user/default/workflows`
+
+This means any workflows you save in ComfyUI will be automatically stored in `/workspace/workflows` and persist across container restarts, which is essential for RunPod deployments where `/workspace` is mounted as persistent storage.
+
 ## Directory Structure
 
 - `/workspace/models/`: Persistent model storage (symlinked to ComfyUI)
+- `/workspace/workflows/`: Persistent workflow storage (symlinked to ComfyUI)
 - `/workspace/civitai_models.txt`: CivitAI auto-download configuration (optional)
 - `/workspace/huggingface_models.txt`: Hugging Face auto-download configuration (optional)
 - `/workspace/runpod-slim/ComfyUI`: Main ComfyUI installation
@@ -217,4 +229,3 @@ Example: Download models to `/workspace/models/checkpoints` and they'll be autom
 ## License
 
 This project is licensed under the GPLv3 License.
-

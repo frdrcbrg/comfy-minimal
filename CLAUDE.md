@@ -284,10 +284,12 @@ Recognized at runtime:
   - `clip_vision/` - CLIP vision models
   - `style_models/` - Style models
   - `unet/` - UNet models
+- `/workspace/workflows/`: **Persistent workflow storage** - Symlinked to ComfyUI's workflows directory
 - `/workspace/civitai_models.txt`: **CivitAI auto-download configuration** - List of CivitAI model IDs to download on startup
 - `/workspace/huggingface_models.txt`: **Hugging Face auto-download configuration** - List of HF repository IDs to download on startup
 - `/workspace/runpod-slim/ComfyUI`: ComfyUI installation and venv
 - `/workspace/runpod-slim/ComfyUI/models/`: Symlinked to `/workspace/models/` subdirectories
+- `/workspace/runpod-slim/ComfyUI/user/default/workflows/`: Symlinked to `/workspace/workflows/`
 - `/workspace/runpod-slim/comfyui_args.txt`: Custom startup arguments
 - `/workspace/runpod-slim/filebrowser.db`: FileBrowser database
 - `/workspace/runpod-slim/comfyui.log`: ComfyUI stdout/stderr
@@ -316,6 +318,25 @@ huggingface-cli download username/model --local-dir /workspace/models/loras
 # Models are immediately available in ComfyUI via symlinks
 # They survive container restarts because /workspace is typically persistent
 ```
+
+## Persistent Workflow Storage
+
+The start scripts automatically set up a symlink from `/workspace/runpod-slim/ComfyUI/user/default/workflows/` to `/workspace/workflows/`. This means:
+
+- **Workflows saved in ComfyUI persist across container restarts**
+- You can mount `/workspace` as a volume for persistence between container recreations
+- Any workflows you save in ComfyUI are automatically stored in `/workspace/workflows`
+- Pre-existing workflows in `/workspace/workflows` are automatically available in ComfyUI
+
+The `setup_workflow_symlinks()` function in start scripts:
+1. Creates `/workspace/workflows/` if it doesn't exist
+2. Creates `ComfyUI/user/default/` directory structure if needed
+3. Backs up any existing ComfyUI workflows directory (as `workflows.bak`)
+4. Copies any existing workflows to persistent storage
+5. Creates symlink from ComfyUI workflows directory to persistent storage
+6. Handles broken symlinks gracefully
+
+This is essential for RunPod deployments where `/workspace` is mounted as persistent storage, ensuring your workflows are never lost across container restarts.
 
 ## Development Conventions
 

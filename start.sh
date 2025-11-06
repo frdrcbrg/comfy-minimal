@@ -180,6 +180,43 @@ setup_model_symlinks() {
     echo "Model storage symlinks configured successfully"
 }
 
+# Setup persistent workflow storage
+setup_workflow_symlinks() {
+    echo "Setting up persistent workflow storage..."
+
+    PERSISTENT_WORKFLOWS="/workspace/workflows"
+    COMFYUI_WORKFLOWS="$COMFYUI_DIR/user/default/workflows"
+
+    # Create persistent workflows directory if it doesn't exist
+    mkdir -p "$PERSISTENT_WORKFLOWS"
+
+    # Create user/default directory structure if it doesn't exist
+    mkdir -p "$COMFYUI_DIR/user/default"
+
+    # Handle existing workflows directory
+    if [ -d "$COMFYUI_WORKFLOWS" ] && [ ! -L "$COMFYUI_WORKFLOWS" ]; then
+        echo "Backing up existing workflows directory..."
+        mv "$COMFYUI_WORKFLOWS" "${COMFYUI_WORKFLOWS}.bak"
+        # Copy any existing workflows to persistent storage
+        if [ -d "${COMFYUI_WORKFLOWS}.bak" ]; then
+            cp -r "${COMFYUI_WORKFLOWS}.bak"/* "$PERSISTENT_WORKFLOWS/" 2>/dev/null || true
+        fi
+    fi
+
+    # Remove broken symlink if it exists
+    if [ -L "$COMFYUI_WORKFLOWS" ] && [ ! -e "$COMFYUI_WORKFLOWS" ]; then
+        rm "$COMFYUI_WORKFLOWS"
+    fi
+
+    # Create symlink if it doesn't exist
+    if [ ! -e "$COMFYUI_WORKFLOWS" ]; then
+        ln -s "$PERSISTENT_WORKFLOWS" "$COMFYUI_WORKFLOWS"
+        echo "Created symlink: $COMFYUI_WORKFLOWS -> $PERSISTENT_WORKFLOWS"
+    fi
+
+    echo "Workflow storage symlink configured successfully"
+}
+
 # Auto-download models from CivitAI based on model list
 auto_download_civitai_models() {
     MODELS_LIST="/workspace/civitai_models.txt"
@@ -460,6 +497,9 @@ fi
 
 # Setup persistent model storage with symlinks
 setup_model_symlinks
+
+# Setup persistent workflow storage with symlinks
+setup_workflow_symlinks
 
 # Auto-download CivitAI models if configured
 auto_download_civitai_models

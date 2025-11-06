@@ -77,6 +77,7 @@ Startup is handled by `start.sh` (or `start.5090.sh` for the 5090 image):
 - Ensures `comfyui_args.txt` exists.
 - Clones ComfyUI and preselected custom nodes on first run, then creates a Python 3.12 venv and installs dependencies using `uv`.
 - **Sets up persistent model storage**: Creates `/workspace/models/` directory structure and symlinks all ComfyUI model subdirectories to it. This ensures models persist across container restarts.
+- **Sets up persistent workflow storage**: Creates `/workspace/workflows/` and symlinks `ComfyUI/user/default/workflows` to it. This ensures workflows persist across container restarts.
 - **Auto-downloads CivitAI models**: Reads `/workspace/civitai_models.txt` and downloads configured models. Creates example file if it doesn't exist. Uses civitdl's built-in caching to skip already-downloaded models.
 - **Auto-downloads Hugging Face models**: Reads `/workspace/huggingface_models.txt` and downloads configured models. Creates example file if it doesn't exist. Uses huggingface-cli with HF_TOKEN for authentication.
 - Starts ComfyUI with fixed args `--listen 0.0.0.0 --port 8188` plus any custom args from `comfyui_args.txt`.
@@ -147,6 +148,23 @@ Supported model subdirectories:
 - `checkpoints`, `loras`, `vae`, `embeddings`, `hypernetworks`, `controlnet`, `upscale_models`, `clip`, `clip_vision`, `style_models`, `unet`
 
 This ensures all models stored in `/workspace/models/` persist across container restarts, which is critical for RunPod deployments where `/workspace` is typically mounted as persistent storage.
+
+## Persistent Workflow Storage
+
+The container implements automatic workflow persistence via symlinks:
+
+- **Location**: `/workspace/workflows/` is the persistent storage location
+- **Symlink**: `ComfyUI/user/default/workflows` is symlinked to `/workspace/workflows`
+- **Function**: `setup_workflow_symlinks()` in both start scripts handles setup
+- **Behavior**:
+  - Creates `/workspace/workflows/` if it doesn't exist
+  - Creates `ComfyUI/user/default/` directory structure if needed
+  - Backs up existing ComfyUI workflows directory before creating symlink (as `workflows.bak`)
+  - Copies any existing workflows to persistent storage
+  - Creates symlink from ComfyUI workflows directory to persistent storage
+  - Runs after model symlinks but before auto-downloads
+
+This ensures all workflows saved in ComfyUI persist across container restarts, which is critical for RunPod deployments where `/workspace` is typically mounted as persistent storage.
 
 ## CivitAI Auto-Download
 

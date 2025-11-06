@@ -61,7 +61,7 @@ export_env_vars() {
     > "$SSH_ENV_DIR"
     
     # Export to multiple locations for maximum compatibility
-    printenv | grep -E '^RUNPOD_|^PATH=|^_=|^CUDA|^LD_LIBRARY_PATH|^PYTHONPATH' | while read -r line; do
+    printenv | grep -E '^RUNPOD_|^PATH=|^_=|^CUDA|^LD_LIBRARY_PATH|^PYTHONPATH|^CIVITAI_API_KEY' | while read -r line; do
         # Get variable name and value
         name=$(echo "$line" | cut -d= -f1)
         value=$(echo "$line" | cut -d= -f2-)
@@ -106,6 +106,15 @@ start_jupyter() {
     echo "Jupyter Lab started"
 }
 
+# Configure civitdl with API key if provided
+configure_civitdl() {
+    if [[ -n "$CIVITAI_API_KEY" ]]; then
+        echo "Configuring civitdl with provided API key..."
+        export CIVITAI_API_KEY="$CIVITAI_API_KEY"
+        echo "CIVITAI_API_KEY has been set and will be available for civitdl"
+    fi
+}
+
 # ---------------------------------------------------------------------------- #
 #                               Main Program                                     #
 # ---------------------------------------------------------------------------- #
@@ -113,6 +122,7 @@ start_jupyter() {
 # Setup environment
 setup_ssh
 export_env_vars
+configure_civitdl
 
 # Initialize FileBrowser if not already done
 if [ ! -f "$DB_FILE" ]; then

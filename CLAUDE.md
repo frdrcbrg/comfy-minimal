@@ -56,6 +56,7 @@ docker buildx bake -f docker-bake.hcl dev
 docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
   -e JUPYTER_PASSWORD=yourtoken \
+  -e CIVITAI_API_KEY=your_api_key_here \
   -v "$PWD/workspace":/workspace \
   ghcr.io/frdrcbrg/comfy-minimal:dev
 ```
@@ -66,6 +67,7 @@ Or pull and run the latest production image:
 docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
   -e JUPYTER_PASSWORD=yourtoken \
+  -e CIVITAI_API_KEY=your_api_key_here \
   -v "$PWD/workspace":/workspace \
   ghcr.io/frdrcbrg/comfy-minimal:latest
 ```
@@ -117,18 +119,23 @@ Managed in the `CUSTOM_NODES` array in start scripts.
 
 **civitdl** - CLI tool for batch downloading models from CivitAI, installed system-wide via pip.
 
+API Key Configuration:
+- Set the `CIVITAI_API_KEY` environment variable when starting the container
+- The start script automatically exports this variable system-wide
+- Once set, civitdl can access it without needing the `--api-key` flag
+
 Usage examples:
 ```bash
-# Download model by ID or URL to ComfyUI checkpoints
+# Download model by ID or URL to ComfyUI checkpoints (uses CIVITAI_API_KEY if set)
 civitdl 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
 
-# Download with API key for restricted models
+# Or specify API key manually
 civitdl --api-key YOUR_API_KEY 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
 
 # Download LoRAs
 civitdl 789012 /workspace/runpod-slim/ComfyUI/models/loras
 
-# Configure default settings (interactive)
+# Configure additional settings (interactive)
 civitconfig
 ```
 
@@ -178,6 +185,7 @@ Extend installation blocks in the start script after venv activation. Use `uv pi
 Recognized at runtime:
 - `PUBLIC_KEY`: SSH public key for root. If not set, a random password is generated and logged
 - `JUPYTER_PASSWORD`: JupyterLab token (no browser mode)
+- `CIVITAI_API_KEY`: CivitAI API key for downloading models. When set, this is exported system-wide and available to civitdl
 - CUDA/GPU vars (`CUDA*`, `LD_LIBRARY_PATH`, `PYTHONPATH`) are auto-propagated
 
 ## Directory Structure at Runtime

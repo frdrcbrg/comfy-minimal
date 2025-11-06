@@ -52,6 +52,7 @@ The images are automatically built and published via GitHub Actions on every pus
 docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
   -e JUPYTER_PASSWORD=yourtoken \
+  -e CIVITAI_API_KEY=your_api_key_here \
   -v "$PWD/workspace":/workspace \
   ghcr.io/frdrcbrg/comfy-minimal:latest
 ```
@@ -66,16 +67,28 @@ You can customize ComfyUI startup arguments by editing `/workspace/runpod-slim/c
 
 ## Downloading Models from CivitAI
 
-The container includes `civitdl`, a CLI tool for batch downloading Stable Diffusion models from CivitAI:
+The container includes `civitdl`, a CLI tool for batch downloading Stable Diffusion models from CivitAI.
+
+### Setting up your CivitAI API Key
+
+Set the `CIVITAI_API_KEY` environment variable when running the container to automatically configure your API key:
 
 ```bash
-# Download a model by ID or URL
+docker run -e CIVITAI_API_KEY="your_api_key_here" ...
+```
+
+In RunPod, add this as an environment variable in your template settings.
+
+### Using civitdl
+
+```bash
+# Download a model by ID or URL (uses CIVITAI_API_KEY if set)
 civitdl 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
 
-# Download with API key (for restricted models)
+# Or specify API key manually
 civitdl --api-key YOUR_API_KEY 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
 
-# Configure default settings
+# Configure additional settings interactively
 civitconfig
 ```
 

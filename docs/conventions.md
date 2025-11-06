@@ -96,6 +96,7 @@ Recognized at runtime by the start scripts:
 
 - `PUBLIC_KEY` – If provided, enables key-based SSH for root; otherwise a random password is generated and printed.
 - `JUPYTER_PASSWORD` – If set, used as the JupyterLab token (no browser; root at `/workspace`).
+- `CIVITAI_API_KEY` – If set, exported system-wide for use with civitdl. Allows downloading models from CivitAI without specifying the API key in each command.
 - GPU/CUDA-related environment variables are propagated (`CUDA*`, `LD_LIBRARY_PATH`, `PYTHONPATH`, and `RUNPOD_*` vars if present in the environment).
 
 ## Dependency Management

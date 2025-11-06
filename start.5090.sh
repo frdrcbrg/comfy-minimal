@@ -325,6 +325,66 @@ MODELLIST
     echo "Hugging Face auto-download complete"
 }
 
+# Display startup banner with system information
+print_banner() {
+    local container_ip=$(hostname -I | awk '{print $1}')
+    local gpu_info="Not detected"
+
+    # Try to detect GPU
+    if command -v nvidia-smi &> /dev/null; then
+        gpu_info=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1 || echo "NVIDIA GPU (driver issue)")
+    fi
+
+    # Check configuration status
+    local civitai_status="❌ Not configured"
+    [[ -n "$CIVITAI_API_KEY" ]] && civitai_status="✅ Configured"
+
+    local hf_status="❌ Not configured"
+    [[ -n "$HF_TOKEN" ]] && hf_status="✅ Configured"
+
+    local ssh_method="🔑 SSH Key"
+    [[ -z "$PUBLIC_KEY" ]] && ssh_method="🔐 Password (check logs)"
+
+    echo ""
+    echo "╔════════════════════════════════════════════════════════════════════════╗"
+    echo "║                                                                        ║"
+    echo "║                          COMFY MINIMAL                                 ║"
+    echo "║                    ComfyUI + Essential Tools                           ║"
+    echo "║                                                                        ║"
+    echo "╚════════════════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "📦 CONTAINER INFO"
+    echo "   Variant      : RTX 5090 (CUDA 12.8)"
+    echo "   GPU          : $gpu_info"
+    echo "   IP Address   : $container_ip"
+    echo ""
+    echo "🌐 SERVICES & PORTS"
+    echo "   ComfyUI      : http://$container_ip:8188"
+    echo "   FileBrowser  : http://$container_ip:8080"
+    echo "   SSH          : ssh root@$container_ip (port 22)"
+    echo ""
+    echo "🔧 CONFIGURATION STATUS"
+    echo "   CivitAI API  : $civitai_status"
+    echo "   Hugging Face : $hf_status"
+    echo "   SSH Access   : $ssh_method"
+    echo ""
+    echo "💾 STORAGE LOCATIONS"
+    echo "   Models       : /workspace/models/"
+    echo "   Workflows    : /workspace/workflows/"
+    echo "   ComfyUI      : /workspace/runpod-slim/ComfyUI/"
+    echo ""
+    echo "📚 USEFUL COMMANDS"
+    echo "   Download from CivitAI    : civitdl <model_id> /workspace/models/checkpoints"
+    echo "   Download from HuggingFace: huggingface-cli download <repo> --local-dir /workspace/models"
+    echo "   View ComfyUI logs        : tail -f /workspace/runpod-slim/comfyui.log"
+    echo "   Browse files             : Visit FileBrowser at port 8080"
+    echo ""
+    echo "────────────────────────────────────────────────────────────────────────"
+    echo "🚀 Starting ComfyUI... (logs will appear below)"
+    echo "────────────────────────────────────────────────────────────────────────"
+    echo ""
+}
+
 # ---------------------------------------------------------------------------- #
 #                               Main Program                                     #
 # ---------------------------------------------------------------------------- #
@@ -496,6 +556,9 @@ auto_download_civitai_models
 
 # Auto-download Hugging Face models if configured
 auto_download_huggingface_models
+
+# Display startup banner
+print_banner
 
 # Start ComfyUI with custom arguments if provided
 cd $COMFYUI_DIR

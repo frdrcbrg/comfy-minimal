@@ -27,6 +27,9 @@ A compact and optimized Docker container designed as an easy-to-use RunPod templ
   - UV package installer for faster dependency installation
   - NVENC support in FFmpeg
   - Optimized CUDA configurations
+- User experience features:
+  - Informative startup banner with system info, configuration status, and useful commands
+  - Automatic GPU detection and display
 
 ## Ports
 

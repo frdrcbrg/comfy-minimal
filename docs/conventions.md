@@ -79,6 +79,7 @@ Startup is handled by `start.sh` (or `start.5090.sh` for the 5090 image):
 - **Sets up persistent workflow storage**: Creates `/workspace/workflows/` and symlinks `ComfyUI/user/default/workflows` to it. This ensures workflows persist across container restarts.
 - **Auto-downloads CivitAI models**: Reads `/workspace/civitai_models.txt` and downloads configured models. Creates example file if it doesn't exist. Uses civitdl's built-in caching to skip already-downloaded models.
 - **Auto-downloads Hugging Face models**: Reads `/workspace/huggingface_models.txt` and downloads configured models. Creates example file if it doesn't exist. Uses huggingface-cli with HF_TOKEN for authentication.
+- **Displays startup banner**: Shows system info (GPU, IP, variant), service URLs, configuration status (API keys, SSH method), storage locations, and useful commands. Provides immediate visibility into container state.
 - Starts ComfyUI with fixed args `--listen 0.0.0.0 --port 8188` plus any custom args from `comfyui_args.txt`.
 
 Differences in 5090 script:

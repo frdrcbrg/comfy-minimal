@@ -97,7 +97,8 @@ Both `start.sh` and `start.5090.sh` execute on container start:
    - Creates Python 3.12 venv using `uv` for fast installs (`UV_LINK_MODE=copy`)
    - Installs ComfyUI requirements.txt
    - Iterates through custom_nodes/* and installs requirements.txt, runs install.py/setup.py
-5. **ComfyUI Launch**: Starts with fixed args `--listen 0.0.0.0 --port 8188` plus custom args from `/workspace/runpod-slim/comfyui_args.txt`
+5. **Startup Banner**: Displays system info (GPU, IP address, variant), service URLs, configuration status (API keys, SSH auth method), storage locations, and useful commands
+6. **ComfyUI Launch**: Starts with fixed args `--listen 0.0.0.0 --port 8188` plus custom args from `/workspace/runpod-slim/comfyui_args.txt`
 
 ### Pre-installed Custom Nodes
 

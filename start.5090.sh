@@ -61,7 +61,7 @@ export_env_vars() {
     > "$SSH_ENV_DIR"
     
     # Export to multiple locations for maximum compatibility
-    printenv | grep -E '^RUNPOD_|^PATH=|^_=|^CUDA|^LD_LIBRARY_PATH|^PYTHONPATH|^CIVITAI_API_KEY' | while read -r line; do
+    printenv | grep -E '^RUNPOD_|^PATH=|^_=|^CUDA|^LD_LIBRARY_PATH|^PYTHONPATH|^CIVITAI_API_KEY|^HF_TOKEN|^HF_HOME' | while read -r line; do
         # Get variable name and value
         name=$(echo "$line" | cut -d= -f1)
         value=$(echo "$line" | cut -d= -f2-)
@@ -115,6 +115,17 @@ configure_civitdl() {
     fi
 }
 
+# Configure Hugging Face CLI with token if provided
+configure_huggingface() {
+    if [[ -n "$HF_TOKEN" ]]; then
+        echo "Configuring Hugging Face CLI with provided token..."
+        export HF_TOKEN="$HF_TOKEN"
+        # Login non-interactively
+        huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential 2>/dev/null || true
+        echo "HF_TOKEN has been set and huggingface-cli has been configured"
+    fi
+}
+
 # ---------------------------------------------------------------------------- #
 #                               Main Program                                     #
 # ---------------------------------------------------------------------------- #
@@ -123,6 +134,7 @@ configure_civitdl() {
 setup_ssh
 export_env_vars
 configure_civitdl
+configure_huggingface
 
 # Initialize FileBrowser if not already done
 if [ ! -f "$DB_FILE" ]; then

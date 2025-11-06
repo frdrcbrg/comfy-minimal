@@ -10,7 +10,7 @@ This document outlines how to work in this repository from a developer point of 
   - RTX 5090 image: CUDA 12.8, PyTorch Nightly (explicit cu128 wheels)
 - **Python**: 3.12 (set as system default inside the image)
 - **Package manager**: pip + uv (uv used for fast installs; `UV_LINK_MODE=copy`)
-- **Tools bundled**: FileBrowser (port 8080), JupyterLab (port 8888), OpenSSH server (port 22), FFmpeg (NVENC), civitdl (CivitAI model downloader), common CLI tools
+- **Tools bundled**: FileBrowser (port 8080), JupyterLab (port 8888), OpenSSH server (port 22), FFmpeg (NVENC), civitdl (CivitAI model downloader), Hugging Face CLI (huggingface-cli), common CLI tools
 - **Primary app**: ComfyUI, with pre-installed custom nodes
 
 ## Repository Layout
@@ -97,6 +97,8 @@ Recognized at runtime by the start scripts:
 - `PUBLIC_KEY` – If provided, enables key-based SSH for root; otherwise a random password is generated and printed.
 - `JUPYTER_PASSWORD` – If set, used as the JupyterLab token (no browser; root at `/workspace`).
 - `CIVITAI_API_KEY` – If set, exported system-wide for use with civitdl. Allows downloading models from CivitAI without specifying the API key in each command.
+- `HF_TOKEN` – If set, automatically logs in to Hugging Face CLI. Enables access to private/gated models and upload capabilities.
+- `HF_HOME` – Optional. If set, specifies custom location for Hugging Face cache directory.
 - GPU/CUDA-related environment variables are propagated (`CUDA*`, `LD_LIBRARY_PATH`, `PYTHONPATH`, and `RUNPOD_*` vars if present in the environment).
 
 ## Dependency Management

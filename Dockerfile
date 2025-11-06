@@ -54,8 +54,8 @@ RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh |
 ENV PATH=/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH:-}
 
-# Install Jupyter with Python kernel and civitdl for CivitAI model downloads
-RUN pip install jupyter civitdl
+# Install Jupyter with Python kernel, civitdl for CivitAI, and Hugging Face CLI
+RUN pip install jupyter civitdl huggingface_hub
 
 # Configure SSH for root login
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \

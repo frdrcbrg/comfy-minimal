@@ -19,6 +19,7 @@ A compact and optimized Docker container designed as an easy-to-use RunPod templ
   - JupyterLab workspace (port 8048)
   - SSH access
   - civitdl for batch downloading models from CivitAI
+  - Hugging Face CLI for downloading models and datasets from Hugging Face Hub
 - Pre-installed custom nodes:
   - ComfyUI-Manager
   - ComfyUI-Crystools
@@ -53,6 +54,7 @@ docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
   -e JUPYTER_PASSWORD=yourtoken \
   -e CIVITAI_API_KEY=your_api_key_here \
+  -e HF_TOKEN=your_hf_token_here \
   -v "$PWD/workspace":/workspace \
   ghcr.io/frdrcbrg/comfy-minimal:latest
 ```
@@ -93,6 +95,41 @@ civitconfig
 ```
 
 Models are downloaded with their metadata and sample images. For more information, visit the [civitdl GitHub repository](https://github.com/OwenTruong/civitdl).
+
+## Downloading from Hugging Face
+
+The container includes the Hugging Face CLI for downloading models and datasets from Hugging Face Hub.
+
+### Setting up your Hugging Face Token
+
+Set the `HF_TOKEN` environment variable when running the container to automatically authenticate:
+
+```bash
+docker run -e HF_TOKEN="your_hf_token_here" ...
+```
+
+In RunPod, add this as an environment variable in your template settings. Get your token from [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
+
+### Using Hugging Face CLI
+
+```bash
+# Download a single file
+huggingface-cli download gpt2 config.json --local-dir /workspace/runpod-slim/ComfyUI/models
+
+# Download an entire model repository
+huggingface-cli download stabilityai/stable-diffusion-xl-base-1.0 --local-dir /workspace/runpod-slim/ComfyUI/models/checkpoints/sdxl
+
+# Download a specific revision
+huggingface-cli download runwayml/stable-diffusion-v1-5 --revision fp16 --local-dir /workspace/models
+
+# Upload files to Hub
+huggingface-cli upload my-username/my-model ./local-folder
+
+# Check authentication status
+huggingface-cli whoami
+```
+
+For more information, visit the [Hugging Face CLI documentation](https://huggingface.co/docs/huggingface_hub/main/guides/cli).
 
 ## Directory Structure
 

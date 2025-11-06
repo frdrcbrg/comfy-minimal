@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Comfy Minimal is a highly optimized Docker container (~650MB) for running ComfyUI on RunPod. It provides a complete environment with ComfyUI, FileBrowser, JupyterLab, SSH access, and civitdl for downloading models from CivitAI, optimized for remote GPU deployments.
+Comfy Minimal is a highly optimized Docker container (~650MB) for running ComfyUI on RunPod. It provides a complete environment with ComfyUI, FileBrowser, JupyterLab, SSH access, civitdl for downloading models from CivitAI, and Hugging Face CLI for downloading from Hugging Face Hub, optimized for remote GPU deployments.
 
 ## Build System
 
@@ -57,6 +57,7 @@ docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
   -e JUPYTER_PASSWORD=yourtoken \
   -e CIVITAI_API_KEY=your_api_key_here \
+  -e HF_TOKEN=your_hf_token_here \
   -v "$PWD/workspace":/workspace \
   ghcr.io/frdrcbrg/comfy-minimal:dev
 ```
@@ -68,6 +69,7 @@ docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
   -e JUPYTER_PASSWORD=yourtoken \
   -e CIVITAI_API_KEY=your_api_key_here \
+  -e HF_TOKEN=your_hf_token_here \
   -v "$PWD/workspace":/workspace \
   ghcr.io/frdrcbrg/comfy-minimal:latest
 ```
@@ -148,6 +150,44 @@ Features:
 
 Repository: https://github.com/OwenTruong/civitdl
 
+**Hugging Face CLI** - Official CLI tool for downloading models and datasets from Hugging Face Hub, installed system-wide via pip (huggingface_hub package).
+
+Token Configuration:
+- Set the `HF_TOKEN` environment variable when starting the container
+- The start script automatically logs in with `huggingface-cli login` non-interactively
+- Once authenticated, you can download private/gated models and upload to Hub
+
+Usage examples:
+```bash
+# Download a single file
+huggingface-cli download gpt2 config.json --local-dir /workspace/models
+
+# Download entire model repository
+huggingface-cli download stabilityai/stable-diffusion-xl-base-1.0 --local-dir /workspace/runpod-slim/ComfyUI/models/checkpoints/sdxl
+
+# Download specific revision (e.g., fp16 version)
+huggingface-cli download runwayml/stable-diffusion-v1-5 --revision fp16 --local-dir /workspace/models
+
+# Upload files to your Hub repository
+huggingface-cli upload my-username/my-model ./local-folder
+
+# Check authentication status
+huggingface-cli whoami
+
+# List cached models
+huggingface-cli scan-cache
+```
+
+Features:
+- Download single files or entire repositories
+- Support for private and gated models (with proper authentication)
+- Upload files and folders to Hugging Face Hub
+- Manage local cache
+- Git credential integration for seamless authentication
+
+Get your token: https://huggingface.co/settings/tokens
+Documentation: https://huggingface.co/docs/huggingface_hub/main/guides/cli
+
 ### Dependency Management
 
 - **Python**: 3.12 system default
@@ -186,6 +226,8 @@ Recognized at runtime:
 - `PUBLIC_KEY`: SSH public key for root. If not set, a random password is generated and logged
 - `JUPYTER_PASSWORD`: JupyterLab token (no browser mode)
 - `CIVITAI_API_KEY`: CivitAI API key for downloading models. When set, this is exported system-wide and available to civitdl
+- `HF_TOKEN`: Hugging Face authentication token. When set, the CLI is automatically logged in and can access private/gated models
+- `HF_HOME`: Optional. Custom location for Hugging Face cache directory
 - CUDA/GPU vars (`CUDA*`, `LD_LIBRARY_PATH`, `PYTHONPATH`) are auto-propagated
 
 ## Directory Structure at Runtime

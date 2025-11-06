@@ -128,14 +128,14 @@ API Key Configuration:
 
 Usage examples:
 ```bash
-# Download model by ID or URL to ComfyUI checkpoints (uses CIVITAI_API_KEY if set)
-civitdl 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
+# Download model by ID or URL to persistent storage (uses CIVITAI_API_KEY if set)
+civitdl 123456 /workspace/models/checkpoints
 
 # Or specify API key manually
-civitdl --api-key YOUR_API_KEY 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
+civitdl --api-key YOUR_API_KEY 123456 /workspace/models/checkpoints
 
-# Download LoRAs
-civitdl 789012 /workspace/runpod-slim/ComfyUI/models/loras
+# Download LoRAs to persistent storage
+civitdl 789012 /workspace/models/loras
 
 # Configure additional settings (interactive)
 civitconfig
@@ -159,14 +159,14 @@ Token Configuration:
 
 Usage examples:
 ```bash
-# Download a single file
+# Download a single file to persistent storage
 huggingface-cli download gpt2 config.json --local-dir /workspace/models
 
-# Download entire model repository
-huggingface-cli download stabilityai/stable-diffusion-xl-base-1.0 --local-dir /workspace/runpod-slim/ComfyUI/models/checkpoints/sdxl
+# Download entire model repository to persistent checkpoints
+huggingface-cli download stabilityai/stable-diffusion-xl-base-1.0 --local-dir /workspace/models/checkpoints/sdxl
 
-# Download specific revision (e.g., fp16 version)
-huggingface-cli download runwayml/stable-diffusion-v1-5 --revision fp16 --local-dir /workspace/models
+# Download specific revision (e.g., fp16 version) to persistent storage
+huggingface-cli download runwayml/stable-diffusion-v1-5 --revision fp16 --local-dir /workspace/models/checkpoints
 
 # Upload files to your Hub repository
 huggingface-cli upload my-username/my-model ./local-folder
@@ -232,10 +232,48 @@ Recognized at runtime:
 
 ## Directory Structure at Runtime
 
+- `/workspace/models/`: **Persistent model storage** - All subdirectories are symlinked to ComfyUI's models directory
+  - `checkpoints/` - Stable Diffusion checkpoints
+  - `loras/` - LoRA models
+  - `vae/` - VAE models
+  - `embeddings/` - Textual inversion embeddings
+  - `hypernetworks/` - Hypernetwork models
+  - `controlnet/` - ControlNet models
+  - `upscale_models/` - Upscaler models
+  - `clip/` - CLIP models
+  - `clip_vision/` - CLIP vision models
+  - `style_models/` - Style models
+  - `unet/` - UNet models
 - `/workspace/runpod-slim/ComfyUI`: ComfyUI installation and venv
+- `/workspace/runpod-slim/ComfyUI/models/`: Symlinked to `/workspace/models/` subdirectories
 - `/workspace/runpod-slim/comfyui_args.txt`: Custom startup arguments
 - `/workspace/runpod-slim/filebrowser.db`: FileBrowser database
 - `/workspace/runpod-slim/comfyui.log`: ComfyUI stdout/stderr
+
+## Persistent Model Storage
+
+The start scripts automatically set up symlinks from `/workspace/runpod-slim/ComfyUI/models/` subdirectories to `/workspace/models/` subdirectories. This means:
+
+- **Models stored in `/workspace/models/` persist across container restarts**
+- You can mount `/workspace` as a volume for persistence between container recreations
+- Download models directly to `/workspace/models/{category}` and they're immediately available in ComfyUI
+- When ComfyUI creates model subdirectories on first run, they're automatically backed up and replaced with symlinks
+
+The `setup_model_symlinks()` function in start scripts:
+1. Creates `/workspace/models/` and its subdirectories if they don't exist
+2. Backs up any existing ComfyUI model directories (e.g., `models/checkpoints.bak`)
+3. Creates symlinks from ComfyUI models directory to persistent storage
+4. Handles broken symlinks gracefully
+
+Example workflow:
+```bash
+# Download to persistent storage
+civitdl 123456 /workspace/models/checkpoints
+huggingface-cli download username/model --local-dir /workspace/models/loras
+
+# Models are immediately available in ComfyUI via symlinks
+# They survive container restarts because /workspace is typically persistent
+```
 
 ## Development Conventions
 

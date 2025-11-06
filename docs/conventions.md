@@ -70,10 +70,13 @@ Startup is handled by `start.sh` (or `start.5090.sh` for the 5090 image):
 
 - Initializes SSH server. If `PUBLIC_KEY` is set, it is added to `~/.ssh/authorized_keys`; otherwise a random root password is generated and printed to logs.
 - Exports selected env vars broadly to `/etc/environment`, PAM, and `~/.ssh/environment` for non-interactive shells.
+- Configures civitdl with `CIVITAI_API_KEY` if provided.
+- Configures Hugging Face CLI with `HF_TOKEN` if provided.
 - Initializes and starts FileBrowser on port 8080 (root `/workspace`). Default admin user is created on first run.
 - Starts JupyterLab on port 8888, root at `/workspace`. Token set via `JUPYTER_PASSWORD` if provided.
 - Ensures `comfyui_args.txt` exists.
 - Clones ComfyUI and preselected custom nodes on first run, then creates a Python 3.12 venv and installs dependencies using `uv`.
+- **Sets up persistent model storage**: Creates `/workspace/models/` directory structure and symlinks all ComfyUI model subdirectories to it. This ensures models persist across container restarts.
 - Starts ComfyUI with fixed args `--listen 0.0.0.0 --port 8188` plus any custom args from `comfyui_args.txt`.
 
 Differences in 5090 script:
@@ -125,6 +128,24 @@ Preinstalled custom nodes (initial set):
 - Additional system packages: modify the respective Dockerfile `apt-get install` lines.
 - Python packages: extend installation blocks in the start script after venv activation. Prefer `uv pip install --no-cache ...`.
 
+## Persistent Model Storage
+
+The container implements automatic model persistence via symlinks:
+
+- **Location**: `/workspace/models/` is the persistent storage location
+- **Symlinks**: Each ComfyUI model subdirectory (`checkpoints`, `loras`, `vae`, etc.) is symlinked to `/workspace/models/{subdir}`
+- **Function**: `setup_model_symlinks()` in both start scripts handles setup
+- **Behavior**:
+  - Creates `/workspace/models/` and all subdirectories if they don't exist
+  - Backs up existing ComfyUI model directories before creating symlinks (e.g., `models/checkpoints.bak`)
+  - Creates symlinks from ComfyUI models directory to persistent storage
+  - Runs after ComfyUI setup but before ComfyUI starts
+
+Supported model subdirectories:
+- `checkpoints`, `loras`, `vae`, `embeddings`, `hypernetworks`, `controlnet`, `upscale_models`, `clip`, `clip_vision`, `style_models`, `unet`
+
+This ensures all models stored in `/workspace/models/` persist across container restarts, which is critical for RunPod deployments where `/workspace` is typically mounted as persistent storage.
+
 ## Dev Conventions
 
 - Keep images lean. Prefer runtime install via `uv` over baking large wheels unless required (e.g., 5090 torch wheels).
@@ -133,6 +154,7 @@ Preinstalled custom nodes (initial set):
 - When adding new env vars needed by downstream processes, ensure they are exported in `export_env_vars()` the same way as others.
 - For new custom nodes, ensure idempotent installs: the loop checks for `requirements.txt`, `install.py`, and `setup.py`.
 - Shell scripting: keep `set -e` at top; prefer explicit guards; write idempotent steps safe to re-run.
+- Model storage: Always use `/workspace/models/` in documentation and examples for persistent model storage.
 
 ## Local Development Tips
 

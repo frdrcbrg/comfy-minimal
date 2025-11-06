@@ -126,6 +126,60 @@ configure_huggingface() {
     fi
 }
 
+# Setup persistent model storage with symlinks
+setup_model_symlinks() {
+    echo "Setting up persistent model storage..."
+
+    # Create persistent models directory
+    mkdir -p /workspace/models
+
+    # ComfyUI models directory
+    MODELS_DIR="$COMFYUI_DIR/models"
+
+    # Common model subdirectories in ComfyUI
+    MODEL_SUBDIRS=(
+        "checkpoints"
+        "loras"
+        "vae"
+        "embeddings"
+        "hypernetworks"
+        "controlnet"
+        "upscale_models"
+        "clip"
+        "clip_vision"
+        "style_models"
+        "unet"
+    )
+
+    # Create persistent directories and symlink them
+    for subdir in "${MODEL_SUBDIRS[@]}"; do
+        PERSISTENT_DIR="/workspace/models/$subdir"
+        COMFYUI_MODEL_DIR="$MODELS_DIR/$subdir"
+
+        # Create persistent directory if it doesn't exist
+        mkdir -p "$PERSISTENT_DIR"
+
+        # If ComfyUI model dir exists and is not a symlink, back it up
+        if [ -d "$COMFYUI_MODEL_DIR" ] && [ ! -L "$COMFYUI_MODEL_DIR" ]; then
+            echo "Backing up existing $subdir directory..."
+            mv "$COMFYUI_MODEL_DIR" "${COMFYUI_MODEL_DIR}.bak"
+        fi
+
+        # Remove if it's a broken symlink
+        if [ -L "$COMFYUI_MODEL_DIR" ] && [ ! -e "$COMFYUI_MODEL_DIR" ]; then
+            rm "$COMFYUI_MODEL_DIR"
+        fi
+
+        # Create symlink if it doesn't exist
+        if [ ! -e "$COMFYUI_MODEL_DIR" ]; then
+            ln -s "$PERSISTENT_DIR" "$COMFYUI_MODEL_DIR"
+            echo "Created symlink: $COMFYUI_MODEL_DIR -> $PERSISTENT_DIR"
+        fi
+    done
+
+    echo "Model storage symlinks configured successfully"
+}
+
 # ---------------------------------------------------------------------------- #
 #                               Main Program                                     #
 # ---------------------------------------------------------------------------- #
@@ -277,6 +331,9 @@ else
         fi
     done
 fi
+
+# Setup persistent model storage with symlinks
+setup_model_symlinks
 
 # Start ComfyUI with custom arguments if provided
 cd $COMFYUI_DIR

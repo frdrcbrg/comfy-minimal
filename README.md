@@ -85,10 +85,14 @@ In RunPod, add this as an environment variable in your template settings.
 
 ```bash
 # Download a model by ID or URL (uses CIVITAI_API_KEY if set)
-civitdl 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
+# Downloads to persistent storage - will survive container restarts
+civitdl 123456 /workspace/models/checkpoints
+
+# Download LoRAs
+civitdl 789012 /workspace/models/loras
 
 # Or specify API key manually
-civitdl --api-key YOUR_API_KEY 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
+civitdl --api-key YOUR_API_KEY 123456 /workspace/models/checkpoints
 
 # Configure additional settings interactively
 civitconfig
@@ -114,13 +118,13 @@ In RunPod, add this as an environment variable in your template settings. Get yo
 
 ```bash
 # Download a single file
-huggingface-cli download gpt2 config.json --local-dir /workspace/runpod-slim/ComfyUI/models
+huggingface-cli download gpt2 config.json --local-dir /workspace/models
 
-# Download an entire model repository
-huggingface-cli download stabilityai/stable-diffusion-xl-base-1.0 --local-dir /workspace/runpod-slim/ComfyUI/models/checkpoints/sdxl
+# Download an entire model repository to persistent storage
+huggingface-cli download stabilityai/stable-diffusion-xl-base-1.0 --local-dir /workspace/models/checkpoints/sdxl
 
 # Download a specific revision
-huggingface-cli download runwayml/stable-diffusion-v1-5 --revision fp16 --local-dir /workspace/models
+huggingface-cli download runwayml/stable-diffusion-v1-5 --revision fp16 --local-dir /workspace/models/checkpoints
 
 # Upload files to Hub
 huggingface-cli upload my-username/my-model ./local-folder
@@ -131,8 +135,32 @@ huggingface-cli whoami
 
 For more information, visit the [Hugging Face CLI documentation](https://huggingface.co/docs/huggingface_hub/main/guides/cli).
 
+## Persistent Model Storage
+
+The container automatically sets up persistent model storage at `/workspace/models` with symlinks to ComfyUI's model directories. This means:
+
+- **All models stored in `/workspace/models` will survive container restarts**
+- Models are automatically accessible to ComfyUI
+- You can mount `/workspace` as a volume to persist models between containers
+
+The following model directories are automatically symlinked:
+- `checkpoints` - Stable Diffusion checkpoints
+- `loras` - LoRA models
+- `vae` - VAE models
+- `embeddings` - Textual inversion embeddings
+- `hypernetworks` - Hypernetwork models
+- `controlnet` - ControlNet models
+- `upscale_models` - Upscaler models
+- `clip` - CLIP models
+- `clip_vision` - CLIP vision models
+- `style_models` - Style models
+- `unet` - UNet models
+
+Example: Download models to `/workspace/models/checkpoints` and they'll be automatically available in ComfyUI.
+
 ## Directory Structure
 
+- `/workspace/models/`: Persistent model storage (symlinked to ComfyUI)
 - `/workspace/runpod-slim/ComfyUI`: Main ComfyUI installation
 - `/workspace/runpod-slim/comfyui_args.txt`: Custom arguments file
 - `/workspace/runpod-slim/filebrowser.db`: FileBrowser database

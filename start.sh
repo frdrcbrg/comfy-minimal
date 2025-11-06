@@ -180,6 +180,62 @@ setup_model_symlinks() {
     echo "Model storage symlinks configured successfully"
 }
 
+# Auto-download models from CivitAI based on model list
+auto_download_civitai_models() {
+    MODELS_LIST="/workspace/civitai_models.txt"
+
+    # Create example file if it doesn't exist
+    if [ ! -f "$MODELS_LIST" ]; then
+        echo "Creating example CivitAI models list at $MODELS_LIST"
+        cat > "$MODELS_LIST" << 'MODELLIST'
+# CivitAI Model Auto-Download List
+# Add one model per line in the format: MODEL_ID CATEGORY
+# Categories: checkpoints, loras, vae, embeddings, controlnet, upscale_models
+# Example:
+# 123456 checkpoints
+# 789012 loras
+
+MODELLIST
+        return
+    fi
+
+    # Check if file has content (excluding comments and empty lines)
+    if ! grep -v '^#' "$MODELS_LIST" | grep -v '^[[:space:]]*$' | grep -q .; then
+        echo "No models configured in $MODELS_LIST, skipping auto-download"
+        return
+    fi
+
+    echo "Auto-downloading CivitAI models from $MODELS_LIST..."
+
+    # Read the file line by line
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Skip comments and empty lines
+        [[ "$line" =~ ^#.*$ ]] && continue
+        [[ -z "${line// }" ]] && continue
+
+        # Parse model ID and category
+        read -r model_id category <<< "$line"
+
+        # Default to checkpoints if no category specified
+        if [ -z "$category" ]; then
+            category="checkpoints"
+        fi
+
+        # Validate model ID is a number
+        if ! [[ "$model_id" =~ ^[0-9]+$ ]]; then
+            echo "Skipping invalid model ID: $model_id"
+            continue
+        fi
+
+        # Download the model
+        echo "Downloading CivitAI model $model_id to /workspace/models/$category..."
+        civitdl "$model_id" "/workspace/models/$category" || echo "Failed to download model $model_id"
+
+    done < "$MODELS_LIST"
+
+    echo "CivitAI auto-download complete"
+}
+
 # ---------------------------------------------------------------------------- #
 #                               Main Program                                     #
 # ---------------------------------------------------------------------------- #
@@ -334,6 +390,9 @@ fi
 
 # Setup persistent model storage with symlinks
 setup_model_symlinks
+
+# Auto-download CivitAI models if configured
+auto_download_civitai_models
 
 # Start ComfyUI with custom arguments if provided
 cd $COMFYUI_DIR

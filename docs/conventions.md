@@ -77,6 +77,7 @@ Startup is handled by `start.sh` (or `start.5090.sh` for the 5090 image):
 - Ensures `comfyui_args.txt` exists.
 - Clones ComfyUI and preselected custom nodes on first run, then creates a Python 3.12 venv and installs dependencies using `uv`.
 - **Sets up persistent model storage**: Creates `/workspace/models/` directory structure and symlinks all ComfyUI model subdirectories to it. This ensures models persist across container restarts.
+- **Auto-downloads CivitAI models**: Reads `/workspace/civitai_models.txt` and downloads configured models. Creates example file if it doesn't exist. Uses civitdl's built-in caching to skip already-downloaded models.
 - Starts ComfyUI with fixed args `--listen 0.0.0.0 --port 8188` plus any custom args from `comfyui_args.txt`.
 
 Differences in 5090 script:
@@ -145,6 +146,33 @@ Supported model subdirectories:
 - `checkpoints`, `loras`, `vae`, `embeddings`, `hypernetworks`, `controlnet`, `upscale_models`, `clip`, `clip_vision`, `style_models`, `unet`
 
 This ensures all models stored in `/workspace/models/` persist across container restarts, which is critical for RunPod deployments where `/workspace` is typically mounted as persistent storage.
+
+## CivitAI Auto-Download
+
+The container supports automatic model downloading from CivitAI on startup:
+
+- **Configuration file**: `/workspace/civitai_models.txt`
+- **Format**: `MODEL_ID CATEGORY` (one per line)
+- **Function**: `auto_download_civitai_models()` in both start scripts
+- **Behavior**:
+  - Creates example file if it doesn't exist
+  - Reads file on every container start (after model symlinks are set up)
+  - Parses each line as `MODEL_ID CATEGORY`
+  - Validates model ID is numeric
+  - Defaults to `checkpoints` category if not specified
+  - Uses civitdl with the configured API key (from `CIVITAI_API_KEY` env var)
+  - civitdl's built-in caching skips already-downloaded models
+  - Continues downloading other models if one fails
+
+Example `/workspace/civitai_models.txt`:
+```text
+# CivitAI Model Auto-Download List
+123456 checkpoints
+789012 loras
+456789 controlnet
+```
+
+This provides a declarative way to manage model downloads across container restarts, ideal for RunPod templates where users want consistent model availability.
 
 ## Dev Conventions
 

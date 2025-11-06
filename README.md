@@ -100,6 +100,29 @@ civitconfig
 
 Models are downloaded with their metadata and sample images. For more information, visit the [civitdl GitHub repository](https://github.com/OwenTruong/civitdl).
 
+### Auto-Download Models on Startup
+
+The container can automatically download models from CivitAI when it starts. Simply create a file at `/workspace/civitai_models.txt` with your model IDs:
+
+```text
+# CivitAI Model Auto-Download List
+# Format: MODEL_ID CATEGORY
+# Categories: checkpoints, loras, vae, embeddings, controlnet, upscale_models
+
+123456 checkpoints
+789012 loras
+456789 controlnet
+```
+
+**Features:**
+- One model per line in the format: `MODEL_ID CATEGORY`
+- If no category is specified, defaults to `checkpoints`
+- Comments start with `#`
+- civitdl automatically skips already-downloaded models
+- Models are downloaded to persistent storage in `/workspace/models/`
+
+The container will automatically create an example file on first run. Edit it to add your models, and they'll be downloaded on the next container start.
+
 ## Downloading from Hugging Face
 
 The container includes the Hugging Face CLI for downloading models and datasets from Hugging Face Hub.
@@ -161,6 +184,7 @@ Example: Download models to `/workspace/models/checkpoints` and they'll be autom
 ## Directory Structure
 
 - `/workspace/models/`: Persistent model storage (symlinked to ComfyUI)
+- `/workspace/civitai_models.txt`: CivitAI auto-download configuration (optional)
 - `/workspace/runpod-slim/ComfyUI`: Main ComfyUI installation
 - `/workspace/runpod-slim/comfyui_args.txt`: Custom arguments file
 - `/workspace/runpod-slim/filebrowser.db`: FileBrowser database

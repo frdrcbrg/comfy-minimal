@@ -147,6 +147,25 @@ Features:
 - Smart caching to skip already-downloaded models
 - API key support for private/restricted models
 - Retry functionality for failed downloads
+- **Auto-download on startup**: Configure models in `/workspace/civitai_models.txt` for automatic download
+
+Auto-download configuration (`/workspace/civitai_models.txt`):
+```text
+# Format: MODEL_ID CATEGORY
+# Example:
+123456 checkpoints
+789012 loras
+456789 controlnet
+```
+
+The `auto_download_civitai_models()` function:
+- Reads `/workspace/civitai_models.txt` on every container start
+- Creates an example file if it doesn't exist
+- Skips comments (`#`) and empty lines
+- Parses each line as `MODEL_ID CATEGORY`
+- Defaults to `checkpoints` if no category specified
+- Uses civitdl's built-in caching to skip already-downloaded models
+- Continues downloading even if one model fails
 
 Repository: https://github.com/OwenTruong/civitdl
 
@@ -244,6 +263,7 @@ Recognized at runtime:
   - `clip_vision/` - CLIP vision models
   - `style_models/` - Style models
   - `unet/` - UNet models
+- `/workspace/civitai_models.txt`: **Auto-download configuration** - List of CivitAI model IDs to download on startup
 - `/workspace/runpod-slim/ComfyUI`: ComfyUI installation and venv
 - `/workspace/runpod-slim/ComfyUI/models/`: Symlinked to `/workspace/models/` subdirectories
 - `/workspace/runpod-slim/comfyui_args.txt`: Custom startup arguments

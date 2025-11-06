@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Comfy Minimal is a highly optimized Docker container (~650MB) for running ComfyUI on RunPod. It provides a complete environment with ComfyUI, FileBrowser, JupyterLab, SSH access, civitdl for downloading models from CivitAI, and Hugging Face CLI for downloading from Hugging Face Hub, optimized for remote GPU deployments.
+Comfy Minimal is a highly optimized Docker container (~650MB) for running ComfyUI on RunPod. It provides a complete environment with ComfyUI, FileBrowser, SSH access, civitdl for downloading models from CivitAI, and Hugging Face CLI for downloading from Hugging Face Hub, optimized for remote GPU deployments.
 
 ## Build System
 
@@ -53,9 +53,8 @@ Run the dev image locally with persistence:
 
 ```bash
 docker buildx bake -f docker-bake.hcl dev
-docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
+docker run --rm -p 8188:8188 -p 8080:8080 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
-  -e JUPYTER_PASSWORD=yourtoken \
   -e CIVITAI_API_KEY=your_api_key_here \
   -e HF_TOKEN=your_hf_token_here \
   -v "$PWD/workspace":/workspace \
@@ -65,9 +64,8 @@ docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
 Or pull and run the latest production image:
 
 ```bash
-docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
+docker run --rm -p 8188:8188 -p 8080:8080 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
-  -e JUPYTER_PASSWORD=yourtoken \
   -e CIVITAI_API_KEY=your_api_key_here \
   -e HF_TOKEN=your_hf_token_here \
   -v "$PWD/workspace":/workspace \
@@ -94,13 +92,12 @@ Both `start.sh` and `start.5090.sh` execute on container start:
 1. **SSH Setup**: Generates host keys, configures key-based or password auth (via `PUBLIC_KEY` env var), starts sshd
 2. **Environment Export**: Propagates CUDA, RUNPOD, PATH, and other vars to `/etc/environment`, PAM config, and SSH environment
 3. **FileBrowser Init**: First-run initialization on port 8080 (root: `/workspace`, default admin user)
-4. **JupyterLab Start**: Launches on port 8888 (root: `/workspace`, token from `JUPYTER_PASSWORD`)
-5. **ComfyUI Setup**:
+4. **ComfyUI Setup**:
    - Clones ComfyUI and custom nodes if not present
    - Creates Python 3.12 venv using `uv` for fast installs (`UV_LINK_MODE=copy`)
    - Installs ComfyUI requirements.txt
    - Iterates through custom_nodes/* and installs requirements.txt, runs install.py/setup.py
-6. **ComfyUI Launch**: Starts with fixed args `--listen 0.0.0.0 --port 8188` plus custom args from `/workspace/runpod-slim/comfyui_args.txt`
+5. **ComfyUI Launch**: Starts with fixed args `--listen 0.0.0.0 --port 8188` plus custom args from `/workspace/runpod-slim/comfyui_args.txt`
 
 ### Pre-installed Custom Nodes
 
@@ -114,7 +111,6 @@ Managed in the `CUSTOM_NODES` array in start scripts.
 
 - 8188: ComfyUI web interface
 - 8080: FileBrowser interface
-- 8888: JupyterLab interface
 - 22: SSH access
 
 ### Built-in Tools
@@ -264,7 +260,6 @@ Extend installation blocks in the start script after venv activation. Use `uv pi
 
 Recognized at runtime:
 - `PUBLIC_KEY`: SSH public key for root. If not set, a random password is generated and logged
-- `JUPYTER_PASSWORD`: JupyterLab token (no browser mode)
 - `CIVITAI_API_KEY`: CivitAI API key for downloading models. When set, this is exported system-wide and available to civitdl
 - `HF_TOKEN`: Hugging Face authentication token. When set, the CLI is automatically logged in and can access private/gated models
 - `HF_HOME`: Optional. Custom location for Hugging Face cache directory
@@ -350,6 +345,5 @@ This is essential for RunPod deployments where `/workspace` is mounted as persis
 ## Troubleshooting
 
 - **ComfyUI not reachable**: Check `/workspace/runpod-slim/comfyui.log`, verify `comfyui_args.txt` doesn't contain invalid flags
-- **JupyterLab auth**: Set `JUPYTER_PASSWORD` explicitly if needed
 - **SSH access**: Check container logs for generated password if `PUBLIC_KEY` not provided, ensure port 22 is mapped
 - **GPU issues on 5090**: Verify you're running the `-5090` tag, confirm driver compatibility with cu128 wheels

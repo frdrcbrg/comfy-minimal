@@ -10,7 +10,7 @@ This document outlines how to work in this repository from a developer point of 
   - RTX 5090 image: CUDA 12.8, PyTorch Nightly (explicit cu128 wheels)
 - **Python**: 3.12 (set as system default inside the image)
 - **Package manager**: pip + uv (uv used for fast installs; `UV_LINK_MODE=copy`)
-- **Tools bundled**: FileBrowser (port 8080), JupyterLab (port 8888), OpenSSH server (port 22), FFmpeg (NVENC), civitdl (CivitAI model downloader), Hugging Face CLI (huggingface-cli), common CLI tools
+- **Tools bundled**: FileBrowser (port 8080), OpenSSH server (port 22), FFmpeg (NVENC), civitdl (CivitAI model downloader), Hugging Face CLI (huggingface-cli), common CLI tools
 - **Primary app**: ComfyUI, with pre-installed custom nodes
 
 ## Repository Layout
@@ -73,7 +73,6 @@ Startup is handled by `start.sh` (or `start.5090.sh` for the 5090 image):
 - Configures civitdl with `CIVITAI_API_KEY` if provided.
 - Configures Hugging Face CLI with `HF_TOKEN` if provided.
 - Initializes and starts FileBrowser on port 8080 (root `/workspace`). Default admin user is created on first run.
-- Starts JupyterLab on port 8888, root at `/workspace`. Token set via `JUPYTER_PASSWORD` if provided.
 - Ensures `comfyui_args.txt` exists.
 - Clones ComfyUI and preselected custom nodes on first run, then creates a Python 3.12 venv and installs dependencies using `uv`.
 - **Sets up persistent model storage**: Creates `/workspace/models/` directory structure and symlinks all ComfyUI model subdirectories to it. This ensures models persist across container restarts.
@@ -91,7 +90,6 @@ Differences in 5090 script:
 
 - 8188 – ComfyUI
 - 8080 – FileBrowser
-- 8888 – JupyterLab
 - 22 – SSH
 
 Expose settings are declared in Dockerfiles.
@@ -101,7 +99,6 @@ Expose settings are declared in Dockerfiles.
 Recognized at runtime by the start scripts:
 
 - `PUBLIC_KEY` – If provided, enables key-based SSH for root; otherwise a random password is generated and printed.
-- `JUPYTER_PASSWORD` – If set, used as the JupyterLab token (no browser; root at `/workspace`).
 - `CIVITAI_API_KEY` – If set, exported system-wide for use with civitdl. Allows downloading models from CivitAI without specifying the API key in each command.
 - `HF_TOKEN` – If set, automatically logs in to Hugging Face CLI. Enables access to private/gated models and upload capabilities.
 - `HF_HOME` – Optional. If set, specifies custom location for Hugging Face cache directory.
@@ -242,9 +239,8 @@ Key differences from CivitAI auto-download:
 - Use the `dev` target to build a locally loadable image without pushing:
   ```bash
   docker buildx bake -f docker-bake.hcl dev
-  docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
+  docker run --rm -p 8188:8188 -p 8080:8080 -p 2222:22 \
     -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
-    -e JUPYTER_PASSWORD=yourtoken \
     -v "$PWD/workspace":/workspace \
     runpod/comfyui:dev
   ```
@@ -254,9 +250,7 @@ Key differences from CivitAI auto-download:
 
 - ComfyUI not reachable on 8188:
   - Check `/workspace/runpod-slim/comfyui.log` (tailing in foreground).
-  - Ensure `comfyui_args.txt` doesn’t contain invalid flags (comments with `#` are okay).
-- JupyterLab auth:
-  - If `JUPYTER_PASSWORD` is unset, Jupyter may allow tokenless or default behavior. Set it explicitly if needed.
+  - Ensure `comfyui_args.txt` doesn't contain invalid flags (comments with `#` are okay).
 - SSH access:
   - If no `PUBLIC_KEY` is provided, a random root password is generated and printed to stdout. Check container logs.
   - Ensure port 22 is mapped from the host, e.g., `-p 2222:22`.

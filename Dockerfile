@@ -54,8 +54,8 @@ RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh |
 ENV PATH=/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64
 
-# Install Jupyter with Python kernel, civitdl for CivitAI, and Hugging Face CLI
-RUN pip install jupyter civitdl huggingface_hub
+# Install civitdl for CivitAI and Hugging Face CLI
+RUN pip install civitdl huggingface_hub
 
 # Configure SSH for root login
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
@@ -67,7 +67,7 @@ RUN mkdir -p /workspace/runpod-slim
 WORKDIR /workspace/runpod-slim
 
 # Expose ports
-EXPOSE 8188 22 8888 8080
+EXPOSE 8188 22 8080
 
 # Copy and set up start script
 COPY start.sh /start.sh

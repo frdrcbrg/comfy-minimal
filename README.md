@@ -16,7 +16,6 @@ A compact and optimized Docker container designed as an easy-to-use RunPod templ
   - RTX 5090: CUDA 12.8 with PyTorch Nightly (optimized for latest NVIDIA GPUs)
 - Built-in tools:
   - FileBrowser for easy file management (port 8080)
-  - JupyterLab workspace (port 8048)
   - SSH access
   - civitdl for batch downloading models from CivitAI
   - Hugging Face CLI for downloading models and datasets from Hugging Face Hub
@@ -33,7 +32,6 @@ A compact and optimized Docker container designed as an easy-to-use RunPod templ
 
 - `8188`: ComfyUI web interface
 - `8080`: FileBrowser interface
-- `8048`: JupyterLab interface
 - `22`: SSH access
 
 ## Usage
@@ -50,9 +48,8 @@ The images are automatically built and published via GitHub Actions on every pus
 ### Local Development
 
 ```bash
-docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
+docker run --rm -p 8188:8188 -p 8080:8080 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
-  -e JUPYTER_PASSWORD=yourtoken \
   -e CIVITAI_API_KEY=your_api_key_here \
   -e HF_TOKEN=your_hf_token_here \
   -v "$PWD/workspace":/workspace \

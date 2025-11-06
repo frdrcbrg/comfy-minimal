@@ -18,6 +18,7 @@ A compact and optimized Docker container designed as an easy-to-use RunPod templ
   - FileBrowser for easy file management (port 8080)
   - JupyterLab workspace (port 8048)
   - SSH access
+  - civitdl for batch downloading models from CivitAI
 - Pre-installed custom nodes:
   - ComfyUI-Manager
   - ComfyUI-Crystools
@@ -62,6 +63,23 @@ You can customize ComfyUI startup arguments by editing `/workspace/runpod-slim/c
 --max-batch-size 8
 --preview-method auto
 ```
+
+## Downloading Models from CivitAI
+
+The container includes `civitdl`, a CLI tool for batch downloading Stable Diffusion models from CivitAI:
+
+```bash
+# Download a model by ID or URL
+civitdl 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
+
+# Download with API key (for restricted models)
+civitdl --api-key YOUR_API_KEY 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
+
+# Configure default settings
+civitconfig
+```
+
+Models are downloaded with their metadata and sample images. For more information, visit the [civitdl GitHub repository](https://github.com/OwenTruong/civitdl).
 
 ## Directory Structure
 

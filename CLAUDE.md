@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Comfy Minimal is a highly optimized Docker container (~650MB) for running ComfyUI on RunPod. It provides a complete environment with ComfyUI, FileBrowser, JupyterLab, and SSH access, optimized for remote GPU deployments.
+Comfy Minimal is a highly optimized Docker container (~650MB) for running ComfyUI on RunPod. It provides a complete environment with ComfyUI, FileBrowser, JupyterLab, SSH access, and civitdl for downloading models from CivitAI, optimized for remote GPU deployments.
 
 ## Build System
 
@@ -112,6 +112,34 @@ Managed in the `CUSTOM_NODES` array in start scripts.
 - 8080: FileBrowser interface
 - 8888: JupyterLab interface
 - 22: SSH access
+
+### Built-in Tools
+
+**civitdl** - CLI tool for batch downloading models from CivitAI, installed system-wide via pip.
+
+Usage examples:
+```bash
+# Download model by ID or URL to ComfyUI checkpoints
+civitdl 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
+
+# Download with API key for restricted models
+civitdl --api-key YOUR_API_KEY 123456 /workspace/runpod-slim/ComfyUI/models/checkpoints
+
+# Download LoRAs
+civitdl 789012 /workspace/runpod-slim/ComfyUI/models/loras
+
+# Configure default settings (interactive)
+civitconfig
+```
+
+Features:
+- Downloads models with metadata and sample images
+- Concurrent downloading for speed
+- Smart caching to skip already-downloaded models
+- API key support for private/restricted models
+- Retry functionality for failed downloads
+
+Repository: https://github.com/OwenTruong/civitdl
 
 ### Dependency Management
 

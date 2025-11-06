@@ -10,7 +10,7 @@ This document outlines how to work in this repository from a developer point of 
   - RTX 5090 image: CUDA 12.8, PyTorch Nightly (explicit cu128 wheels)
 - **Python**: 3.12 (set as system default inside the image)
 - **Package manager**: pip + uv (uv used for fast installs; `UV_LINK_MODE=copy`)
-- **Tools bundled**: FileBrowser (port 8080), JupyterLab (port 8888), OpenSSH server (port 22), FFmpeg (NVENC), common CLI tools
+- **Tools bundled**: FileBrowser (port 8080), JupyterLab (port 8888), OpenSSH server (port 22), FFmpeg (NVENC), civitdl (CivitAI model downloader), common CLI tools
 - **Primary app**: ComfyUI, with pre-installed custom nodes
 
 ## Repository Layout

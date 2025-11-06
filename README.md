@@ -158,6 +158,30 @@ huggingface-cli whoami
 
 For more information, visit the [Hugging Face CLI documentation](https://huggingface.co/docs/huggingface_hub/main/guides/cli).
 
+### Auto-Download Models on Startup
+
+Similar to CivitAI, the container can automatically download models from Hugging Face when it starts. Create a file at `/workspace/huggingface_models.txt`:
+
+```text
+# Hugging Face Model Auto-Download List
+# Format: REPO_ID CATEGORY [REVISION]
+
+stabilityai/stable-diffusion-xl-base-1.0 checkpoints
+runwayml/stable-diffusion-v1-5 checkpoints fp16
+username/my-lora loras
+```
+
+**Features:**
+- Format: `REPO_ID CATEGORY [REVISION]`
+- REVISION is optional (e.g., `main`, `fp16`, etc.)
+- If no category is specified, defaults to `checkpoints`
+- Comments start with `#`
+- Models are downloaded to `/workspace/models/{category}/{repo_name}`
+- Repository names with slashes (e.g., `username/model`) are converted to underscores
+- huggingface-cli automatically handles caching and authentication (via `HF_TOKEN`)
+
+The container will automatically create an example file on first run.
+
 ## Persistent Model Storage
 
 The container automatically sets up persistent model storage at `/workspace/models` with symlinks to ComfyUI's model directories. This means:
@@ -185,6 +209,7 @@ Example: Download models to `/workspace/models/checkpoints` and they'll be autom
 
 - `/workspace/models/`: Persistent model storage (symlinked to ComfyUI)
 - `/workspace/civitai_models.txt`: CivitAI auto-download configuration (optional)
+- `/workspace/huggingface_models.txt`: Hugging Face auto-download configuration (optional)
 - `/workspace/runpod-slim/ComfyUI`: Main ComfyUI installation
 - `/workspace/runpod-slim/comfyui_args.txt`: Custom arguments file
 - `/workspace/runpod-slim/filebrowser.db`: FileBrowser database

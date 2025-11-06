@@ -207,6 +207,27 @@ Features:
 Get your token: https://huggingface.co/settings/tokens
 Documentation: https://huggingface.co/docs/huggingface_hub/main/guides/cli
 
+Auto-download configuration (`/workspace/huggingface_models.txt`):
+```text
+# Format: REPO_ID CATEGORY [REVISION]
+# Example:
+stabilityai/stable-diffusion-xl-base-1.0 checkpoints
+runwayml/stable-diffusion-v1-5 checkpoints fp16
+username/my-lora loras
+```
+
+The `auto_download_huggingface_models()` function:
+- Reads `/workspace/huggingface_models.txt` on every container start
+- Creates an example file if it doesn't exist
+- Skips comments (`#`) and empty lines
+- Parses each line as `REPO_ID CATEGORY [REVISION]`
+- Defaults to `checkpoints` if no category specified
+- Converts repository names with slashes to underscores (e.g., `username/model` → `username_model`)
+- Downloads to `/workspace/models/{category}/{repo_name}`
+- Supports optional revision parameter for specific branches/tags (e.g., `fp16`, `main`)
+- Uses HF_TOKEN for authentication if configured
+- Continues downloading even if one model fails
+
 ### Dependency Management
 
 - **Python**: 3.12 system default
@@ -263,7 +284,8 @@ Recognized at runtime:
   - `clip_vision/` - CLIP vision models
   - `style_models/` - Style models
   - `unet/` - UNet models
-- `/workspace/civitai_models.txt`: **Auto-download configuration** - List of CivitAI model IDs to download on startup
+- `/workspace/civitai_models.txt`: **CivitAI auto-download configuration** - List of CivitAI model IDs to download on startup
+- `/workspace/huggingface_models.txt`: **Hugging Face auto-download configuration** - List of HF repository IDs to download on startup
 - `/workspace/runpod-slim/ComfyUI`: ComfyUI installation and venv
 - `/workspace/runpod-slim/ComfyUI/models/`: Symlinked to `/workspace/models/` subdirectories
 - `/workspace/runpod-slim/comfyui_args.txt`: Custom startup arguments

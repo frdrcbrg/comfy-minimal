@@ -78,6 +78,7 @@ Startup is handled by `start.sh` (or `start.5090.sh` for the 5090 image):
 - Clones ComfyUI and preselected custom nodes on first run, then creates a Python 3.12 venv and installs dependencies using `uv`.
 - **Sets up persistent model storage**: Creates `/workspace/models/` directory structure and symlinks all ComfyUI model subdirectories to it. This ensures models persist across container restarts.
 - **Auto-downloads CivitAI models**: Reads `/workspace/civitai_models.txt` and downloads configured models. Creates example file if it doesn't exist. Uses civitdl's built-in caching to skip already-downloaded models.
+- **Auto-downloads Hugging Face models**: Reads `/workspace/huggingface_models.txt` and downloads configured models. Creates example file if it doesn't exist. Uses huggingface-cli with HF_TOKEN for authentication.
 - Starts ComfyUI with fixed args `--listen 0.0.0.0 --port 8188` plus any custom args from `comfyui_args.txt`.
 
 Differences in 5090 script:
@@ -173,6 +174,40 @@ Example `/workspace/civitai_models.txt`:
 ```
 
 This provides a declarative way to manage model downloads across container restarts, ideal for RunPod templates where users want consistent model availability.
+
+## Hugging Face Auto-Download
+
+The container also supports automatic model downloading from Hugging Face Hub on startup:
+
+- **Configuration file**: `/workspace/huggingface_models.txt`
+- **Format**: `REPO_ID CATEGORY [REVISION]` (one per line)
+- **Function**: `auto_download_huggingface_models()` in both start scripts
+- **Behavior**:
+  - Creates example file if it doesn't exist
+  - Reads file on every container start (after CivitAI download)
+  - Parses each line as `REPO_ID CATEGORY [REVISION]`
+  - Validates repo_id is not empty
+  - Defaults to `checkpoints` category if not specified
+  - Converts repository names with slashes to underscores (e.g., `username/model` → `username_model`)
+  - Downloads to `/workspace/models/{category}/{repo_name}`
+  - Supports optional REVISION parameter (e.g., `main`, `fp16`, branch/tag names)
+  - Uses huggingface-cli with HF_TOKEN for authentication if configured
+  - huggingface-cli's built-in caching handles already-downloaded models
+  - Continues downloading other models if one fails
+
+Example `/workspace/huggingface_models.txt`:
+```text
+# Hugging Face Model Auto-Download List
+stabilityai/stable-diffusion-xl-base-1.0 checkpoints
+runwayml/stable-diffusion-v1-5 checkpoints fp16
+username/my-lora loras
+```
+
+Key differences from CivitAI auto-download:
+- Uses repository IDs instead of numeric model IDs
+- Supports revision parameter for specific branches/tags
+- Repository names are converted to filesystem-safe directory names
+- Requires HF_TOKEN for private/gated models
 
 ## Dev Conventions
 

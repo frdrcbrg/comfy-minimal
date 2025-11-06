@@ -236,6 +236,76 @@ MODELLIST
     echo "CivitAI auto-download complete"
 }
 
+# Auto-download models from Hugging Face based on model list
+auto_download_huggingface_models() {
+    MODELS_LIST="/workspace/huggingface_models.txt"
+
+    # Create example file if it doesn't exist
+    if [ ! -f "$MODELS_LIST" ]; then
+        echo "Creating example Hugging Face models list at $MODELS_LIST"
+        cat > "$MODELS_LIST" << 'MODELLIST'
+# Hugging Face Model Auto-Download List
+# Add one model per line in the format: REPO_ID CATEGORY [REVISION]
+# Categories: checkpoints, loras, vae, embeddings, controlnet, upscale_models
+# REVISION is optional (e.g., main, fp16, etc.)
+# Example:
+# stabilityai/stable-diffusion-xl-base-1.0 checkpoints
+# runwayml/stable-diffusion-v1-5 checkpoints fp16
+# username/my-lora loras
+
+MODELLIST
+        return
+    fi
+
+    # Check if file has content (excluding comments and empty lines)
+    if ! grep -v '^#' "$MODELS_LIST" | grep -v '^[[:space:]]*$' | grep -q .; then
+        echo "No models configured in $MODELS_LIST, skipping auto-download"
+        return
+    fi
+
+    echo "Auto-downloading Hugging Face models from $MODELS_LIST..."
+
+    # Read the file line by line
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Skip comments and empty lines
+        [[ "$line" =~ ^#.*$ ]] && continue
+        [[ -z "${line// }" ]] && continue
+
+        # Parse repo ID, category, and optional revision
+        read -r repo_id category revision <<< "$line"
+
+        # Validate repo_id is not empty
+        if [ -z "$repo_id" ]; then
+            echo "Skipping empty repo ID"
+            continue
+        fi
+
+        # Default to checkpoints if no category specified
+        if [ -z "$category" ]; then
+            category="checkpoints"
+        fi
+
+        # Build download directory path
+        # Replace slashes in repo_id with underscores for directory name
+        repo_dir=$(echo "$repo_id" | tr '/' '_')
+        download_path="/workspace/models/$category/$repo_dir"
+
+        # Build huggingface-cli command
+        echo "Downloading Hugging Face model $repo_id to $download_path..."
+
+        if [ -n "$revision" ]; then
+            # Download with specific revision
+            huggingface-cli download "$repo_id" --revision "$revision" --local-dir "$download_path" || echo "Failed to download model $repo_id (revision: $revision)"
+        else
+            # Download default revision
+            huggingface-cli download "$repo_id" --local-dir "$download_path" || echo "Failed to download model $repo_id"
+        fi
+
+    done < "$MODELS_LIST"
+
+    echo "Hugging Face auto-download complete"
+}
+
 # ---------------------------------------------------------------------------- #
 #                               Main Program                                     #
 # ---------------------------------------------------------------------------- #
@@ -393,6 +463,9 @@ setup_model_symlinks
 
 # Auto-download CivitAI models if configured
 auto_download_civitai_models
+
+# Auto-download Hugging Face models if configured
+auto_download_huggingface_models
 
 # Start ComfyUI with custom arguments if provided
 cd $COMFYUI_DIR

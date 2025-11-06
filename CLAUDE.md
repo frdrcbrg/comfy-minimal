@@ -2,6 +2,46 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Recent Changes (Latest Session)
+
+**Docker Build Optimization (BREAKING CHANGE)**
+- Consolidated `Dockerfile` and `Dockerfile.5090` into single unified `Dockerfile`
+- Added build arguments: `CUDA_VERSION` (12-4 or 12-8) and `START_SCRIPT`
+- Updated `docker-bake.hcl` to pass variant-specific build args to all targets
+- Result: ~95% layer sharing between variants, 40-50% reduction in CI/CD build time
+- Both variants now built from same Dockerfile with different args
+
+**New Pre-installed ComfyUI Custom Nodes**
+- Added `ComfyUI-Impact-Pack` (ltdrdata) - Advanced impact features and detailing tools
+- Added `rgthree-comfy` (rgthree) - Quality of life improvements and workflow enhancements
+- Added `ComfyUI_essentials` (cubiq) - Essential utility nodes
+- Added `ComfyUI-Impact-Subpack` (ltdrdata) - Additional impact pack components
+- Total of 7 custom nodes now installed automatically on first run
+
+**User Experience Improvements**
+- Added informative startup banner showing:
+  - Container info (GPU, IP, variant)
+  - Service URLs (ComfyUI, FileBrowser, SSH)
+  - Configuration status (API keys, SSH method)
+  - Storage locations and useful commands
+- Banner displayed after setup, just before ComfyUI starts
+
+**Persistent Workflow Storage**
+- Added automatic workflow symlink setup
+- `/workspace/workflows/` symlinked to `ComfyUI/user/default/workflows`
+- Ensures all workflows persist across container restarts
+- Function: `setup_workflow_symlinks()` in both start scripts
+
+**Removed Features**
+- Removed JupyterLab (port 8888) to reduce image size and complexity
+- Removed `JUPYTER_PASSWORD` environment variable
+- Saves ~100-150MB and removes background service
+- SSH + FileBrowser still provide full remote access
+
+**Bug Fixes**
+- Fixed Docker undefined variable warnings for `LD_LIBRARY_PATH`
+- Changed from `${LD_LIBRARY_PATH:-}` to direct assignment
+
 ## Overview
 
 Comfy Minimal is a highly optimized Docker container (~650MB) for running ComfyUI on RunPod. It provides a complete environment with ComfyUI, FileBrowser, SSH access, civitdl for downloading models from CivitAI, and Hugging Face CLI for downloading from Hugging Face Hub, optimized for remote GPU deployments.

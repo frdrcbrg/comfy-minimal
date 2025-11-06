@@ -21,8 +21,12 @@ A compact and optimized Docker container designed as an easy-to-use RunPod templ
   - Hugging Face CLI for downloading models and datasets from Hugging Face Hub
 - Pre-installed custom nodes:
   - ComfyUI-Manager
-  - ComfyUI-Crystools
   - ComfyUI-KJNodes
+  - Civicomfy
+  - ComfyUI-Impact-Pack
+  - rgthree-comfy
+  - ComfyUI_essentials
+  - ComfyUI-Impact-Subpack
 - Performance optimizations:
   - UV package installer for faster dependency installation
   - NVENC support in FFmpeg

@@ -116,11 +116,15 @@ Recognized at runtime by the start scripts:
 - 5090 image comments out torch-related requirements and installs CUDA 12.8 torch wheels explicitly.
 - Custom nodes: repos are cloned into `ComfyUI/custom_nodes/`. On first run and subsequent starts, the script attempts to install each node’s `requirements.txt`, run `install.py`, or `setup.py` if present.
 
-Preinstalled custom nodes (initial set):
+Preinstalled custom nodes:
 
 - `ComfyUI-Manager` (ltdrdata)
 - `ComfyUI-KJNodes` (kijai)
 - `Civicomfy` (MoonGoblinDev)
+- `ComfyUI-Impact-Pack` (ltdrdata)
+- `rgthree-comfy` (rgthree)
+- `ComfyUI_essentials` (cubiq)
+- `ComfyUI-Impact-Subpack` (ltdrdata)
 
 ## Customization Points
 

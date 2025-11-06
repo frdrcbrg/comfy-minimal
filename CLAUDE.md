@@ -105,6 +105,10 @@ Both `start.sh` and `start.5090.sh` execute on container start:
 - ComfyUI-Manager (ltdrdata)
 - ComfyUI-KJNodes (kijai)
 - Civicomfy (MoonGoblinDev)
+- ComfyUI-Impact-Pack (ltdrdata)
+- rgthree-comfy (rgthree)
+- ComfyUI_essentials (cubiq)
+- ComfyUI-Impact-Subpack (ltdrdata)
 
 Managed in the `CUSTOM_NODES` array in start scripts.
 

@@ -1,8 +1,8 @@
-# ComfyUI Slim
+# Comfy Minimal
 
 A compact and optimized Docker container designed as an easy-to-use RunPod template for ComfyUI. Images are highly optimized for size, only ~650MB while including all features!
 
-## Why ComfyUI Slim?
+## Why Comfy Minimal?
 
 - Purpose-built for RunPod deployments
 - Ultra-compact: Only ~650MB image size (compared to multi-GB alternatives)
@@ -33,6 +33,27 @@ A compact and optimized Docker container designed as an easy-to-use RunPod templ
 - `8080`: FileBrowser interface
 - `8048`: JupyterLab interface
 - `22`: SSH access
+
+## Usage
+
+### RunPod
+
+Use the following Docker image in your RunPod template:
+
+- **Regular (CUDA 12.4)**: `ghcr.io/frdrcbrg/comfy-minimal:latest`
+- **RTX 5090 (CUDA 12.8)**: `ghcr.io/frdrcbrg/comfy-minimal:latest-5090`
+
+The images are automatically built and published via GitHub Actions on every push to main.
+
+### Local Development
+
+```bash
+docker run --rm -p 8188:8188 -p 8080:8080 -p 8888:8888 -p 2222:22 \
+  -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
+  -e JUPYTER_PASSWORD=yourtoken \
+  -v "$PWD/workspace":/workspace \
+  ghcr.io/frdrcbrg/comfy-minimal:latest
+```
 
 ## Custom Arguments
 

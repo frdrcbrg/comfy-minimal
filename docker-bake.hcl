@@ -1,5 +1,9 @@
 variable "TAG" {
-  default = "slim"
+  default = "latest"
+}
+
+variable "IMAGE_REF" {
+  default = "ghcr.io/frdrcbrg/comfy-minimal"
 }
 
 # Common settings for all targets
@@ -16,8 +20,8 @@ target "regular" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
   tags = [
-    "runpod/comfyui:${TAG}",
-    "runpod/comfyui:latest",
+    "${IMAGE_REF}:${TAG}",
+    "${IMAGE_REF}:latest",
   ]
 }
 
@@ -25,7 +29,7 @@ target "regular" {
 target "dev" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
-  tags = ["runpod/comfyui:dev"]
+  tags = ["${IMAGE_REF}:dev"]
   output = ["type=docker"]
 }
 
@@ -33,13 +37,13 @@ target "dev" {
 target "devpush" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
-  tags = ["runpod/comfyui:dev"]
+  tags = ["${IMAGE_REF}:dev"]
 }
 
 target "devpush5090" {
   inherits = ["common"]
   dockerfile = "Dockerfile.5090"
-  tags = ["runpod/comfyui:dev-5090"]
+  tags = ["${IMAGE_REF}:dev-5090"]
 }
 
 # RTX 5090 optimized image (CUDA 12.8 + latest PyTorch build)
@@ -50,7 +54,7 @@ target "rtx5090" {
     START_SCRIPT = "start.5090.sh"
   }
   tags = [
-    "runpod/comfyui:${TAG}-5090",
-    "runpod/comfyui:latest-5090",
+    "${IMAGE_REF}:${TAG}-5090",
+    "${IMAGE_REF}:latest-5090",
   ]
 }

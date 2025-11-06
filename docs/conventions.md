@@ -1,4 +1,4 @@
-# ComfyUI Slim – Developer Conventions
+# Comfy Minimal – Developer Conventions
 
 This document outlines how to work in this repository from a developer point of view: build targets, runtime behavior, environment, dependency management, customization points, quality gates, and troubleshooting.
 
@@ -35,15 +35,15 @@ Use Docker Buildx Bake with the provided HCL file.
 
 - `regular` (default production):
   - Dockerfile: `Dockerfile`
-  - Tag: `runpod/comfyui:${TAG}` (defaults to `slim`)
+  - Tag: `ghcr.io/frdrcbrg/comfy-minimal:${TAG}` (defaults to `latest`)
   - Platform: `linux/amd64`
 - `dev` (local testing):
   - Dockerfile: `Dockerfile`
-  - Tag: `runpod/comfyui:dev`
+  - Tag: `ghcr.io/frdrcbrg/comfy-minimal:dev`
   - Output: local docker image (not pushed)
 - `rtx5090` (CUDA 12.8 + latest torch):
   - Dockerfile: `Dockerfile.5090`
-  - Tag: `runpod/comfyui:${TAG}-5090`
+  - Tag: `ghcr.io/frdrcbrg/comfy-minimal:${TAG}-5090`
 
 Example commands:
 
@@ -60,7 +60,8 @@ docker buildx bake -f docker-bake.hcl rtx5090
 
 Build args and env:
 
-- `TAG` variable in `docker-bake.hcl` controls the tag suffix (default `slim`).
+- `TAG` variable in `docker-bake.hcl` controls the tag suffix (default `latest`).
+- `IMAGE_REF` variable in `docker-bake.hcl` controls the image repository (default `ghcr.io/frdrcbrg/comfy-minimal`).
 - Build uses BuildKit inline cache.
 
 ## Runtime Behavior

@@ -36,7 +36,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Removed JupyterLab (port 8888) to reduce image size and complexity
 - Removed `JUPYTER_PASSWORD` environment variable
 - Saves ~100-150MB and removes background service
-- SSH + FileBrowser still provide full remote access
+- SSH provides full remote access
 
 **Bug Fixes**
 - Fixed Docker undefined variable warnings for `LD_LIBRARY_PATH`
@@ -44,7 +44,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Comfy Minimal is a highly optimized Docker container (~650MB) for running ComfyUI on RunPod. It provides a complete environment with ComfyUI, FileBrowser, SSH access, civitdl for downloading models from CivitAI, and Hugging Face CLI for downloading from Hugging Face Hub, optimized for remote GPU deployments.
+Comfy Minimal is a highly optimized Docker container (~650MB) for running ComfyUI on RunPod. It provides a complete environment with ComfyUI, code-server (VS Code in the browser), SSH access, civitdl for downloading models from CivitAI, and Hugging Face CLI for downloading from Hugging Face Hub, optimized for remote GPU deployments.
 
 ## Build System
 
@@ -95,6 +95,7 @@ Run the dev image locally with persistence:
 docker buildx bake -f docker-bake.hcl dev
 docker run --rm -p 8188:8188 -p 8080:8080 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
+  -e CODE_SERVER_PASSWORD=your_code_server_password \
   -e CIVITAI_API_KEY=your_api_key_here \
   -e HF_TOKEN=your_hf_token_here \
   -v "$PWD/workspace":/workspace \
@@ -106,6 +107,7 @@ Or pull and run the latest production image:
 ```bash
 docker run --rm -p 8188:8188 -p 8080:8080 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
+  -e CODE_SERVER_PASSWORD=your_code_server_password \
   -e CIVITAI_API_KEY=your_api_key_here \
   -e HF_TOKEN=your_hf_token_here \
   -v "$PWD/workspace":/workspace \
@@ -135,7 +137,7 @@ Both `start.sh` and `start.5090.sh` execute on container start:
 
 1. **SSH Setup**: Generates host keys, configures key-based or password auth (via `PUBLIC_KEY` env var), starts sshd
 2. **Environment Export**: Propagates CUDA, RUNPOD, PATH, and other vars to `/etc/environment`, PAM config, and SSH environment
-3. **FileBrowser Init**: First-run initialization on port 8080 (root: `/workspace`, default admin user)
+3. **code-server Setup**: Configures password (via `CODE_SERVER_PASSWORD` env var or generates random), starts code-server on port 8080
 4. **ComfyUI Setup**:
    - Clones ComfyUI and custom nodes if not present
    - Creates Python 3.12 venv using `uv` for fast installs (`UV_LINK_MODE=copy`)
@@ -153,16 +155,31 @@ Both `start.sh` and `start.5090.sh` execute on container start:
 - rgthree-comfy (rgthree)
 - ComfyUI_essentials (cubiq)
 - ComfyUI-Impact-Subpack (ltdrdata)
+- cg-use-everywhere (chrisgoringe)
 
 Managed in the `CUSTOM_NODES` array in start scripts.
 
 ### Exposed Ports
 
 - 8188: ComfyUI web interface
-- 8080: FileBrowser interface
+- 8080: code-server (VS Code in browser)
 - 22: SSH access
 
 ### Built-in Tools
+
+**code-server** - VS Code running in the browser on port 8080, providing a full IDE experience for editing workflows, custom nodes, and configurations.
+
+Password Configuration:
+- Set the `CODE_SERVER_PASSWORD` environment variable when starting the container
+- If not set, a random password is generated and displayed in the container logs
+- Access the IDE at `http://<container-ip>:8080`
+
+Features:
+- Full VS Code experience in the browser
+- Direct access to `/workspace` directory
+- Extensions support
+- Integrated terminal
+- Git integration
 
 **civitdl** - CLI tool for batch downloading models from CivitAI, installed system-wide via pip.
 
@@ -309,6 +326,7 @@ Extend installation blocks in the start script after venv activation. Use `uv pi
 
 Recognized at runtime:
 - `PUBLIC_KEY`: SSH public key for root. If not set, a random password is generated and logged
+- `CODE_SERVER_PASSWORD`: Password for code-server. If not set, a random password is generated and logged
 - `CIVITAI_API_KEY`: CivitAI API key for downloading models. When set, this is exported system-wide and available to civitdl
 - `HF_TOKEN`: Hugging Face authentication token. When set, the CLI is automatically logged in and can access private/gated models
 - `HF_HOME`: Optional. Custom location for Hugging Face cache directory
@@ -335,8 +353,8 @@ Recognized at runtime:
 - `/workspace/runpod-slim/ComfyUI/models/`: Symlinked to `/workspace/models/` subdirectories
 - `/workspace/runpod-slim/ComfyUI/user/default/workflows/`: Symlinked to `/workspace/workflows/`
 - `/workspace/runpod-slim/comfyui_args.txt`: Custom startup arguments
-- `/workspace/runpod-slim/filebrowser.db`: FileBrowser database
 - `/workspace/runpod-slim/comfyui.log`: ComfyUI stdout/stderr
+- `/workspace/runpod-slim/code-server.log`: code-server stdout/stderr
 
 ## Persistent Model Storage
 

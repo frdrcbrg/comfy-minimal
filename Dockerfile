@@ -7,7 +7,6 @@ ARG START_SCRIPT=start.sh
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
-ENV FILEBROWSER_CONFIG=/workspace/runpod-slim/.filebrowser.json
 
 # Update and install minimal dependencies, CUDA, and common tools
 RUN apt-get update && \
@@ -51,15 +50,15 @@ RUN apt-get update && \
     && rm cuda-keyring_1.1-1_all.deb \
     && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12
 
-# Install FileBrowser
-RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
-
 # Set CUDA environment variables
 ENV PATH=/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64
 
 # Install civitdl for CivitAI and Hugging Face CLI
 RUN pip install civitdl huggingface_hub
+
+# Install code-server
+RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 # Configure SSH for root login
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \

@@ -3,8 +3,6 @@ set -e  # Exit the script if any statement returns a non-true return value
 
 COMFYUI_DIR="/workspace/runpod-slim/ComfyUI"
 VENV_DIR="$COMFYUI_DIR/.venv"
-FILEBROWSER_CONFIG="/root/.config/filebrowser/config.json"
-DB_FILE="/workspace/runpod-slim/filebrowser.db"
 
 # ---------------------------------------------------------------------------- #
 #                          Function Definitions                                  #
@@ -106,6 +104,30 @@ configure_huggingface() {
         huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential 2>/dev/null || true
         echo "HF_TOKEN has been set and huggingface-cli has been configured"
     fi
+}
+
+# Setup and start code-server
+setup_code_server() {
+    # Set or generate password
+    if [[ -z "$CODE_SERVER_PASSWORD" ]]; then
+        CODE_SERVER_PASSWORD=$(openssl rand -base64 12)
+        echo "Generated random code-server password: ${CODE_SERVER_PASSWORD}"
+    fi
+
+    # Create config directory
+    mkdir -p ~/.config/code-server
+
+    # Create config file
+    cat > ~/.config/code-server/config.yaml << EOF
+bind-addr: 0.0.0.0:8080
+auth: password
+password: ${CODE_SERVER_PASSWORD}
+cert: false
+EOF
+
+    # Start code-server in background
+    echo "Starting code-server on port 8080..."
+    nohup code-server --auth password --disable-workspace-trust /workspace &> /workspace/runpod-slim/code-server.log &
 }
 
 # Setup persistent model storage with symlinks
@@ -360,7 +382,7 @@ print_banner() {
     echo ""
     echo "🌐 SERVICES & PORTS"
     echo "   ComfyUI      : http://$container_ip:8188"
-    echo "   FileBrowser  : http://$container_ip:8080"
+    echo "   code-server  : http://$container_ip:8080"
     echo "   SSH          : ssh root@$container_ip (port 22)"
     echo ""
     echo "🔧 CONFIGURATION STATUS"
@@ -377,7 +399,6 @@ print_banner() {
     echo "   Download from CivitAI    : civitdl <model_id> /workspace/models/checkpoints"
     echo "   Download from HuggingFace: huggingface-cli download <repo> --local-dir /workspace/models"
     echo "   View ComfyUI logs        : tail -f /workspace/runpod-slim/comfyui.log"
-    echo "   Browse files             : Visit FileBrowser at port 8080"
     echo ""
     echo "────────────────────────────────────────────────────────────────────────"
     echo "🚀 Starting ComfyUI... (logs will appear below)"
@@ -394,23 +415,7 @@ setup_ssh
 export_env_vars
 configure_civitdl
 configure_huggingface
-
-# Initialize FileBrowser if not already done
-if [ ! -f "$DB_FILE" ]; then
-    echo "Initializing FileBrowser..."
-    filebrowser config init
-    filebrowser config set --address 0.0.0.0
-    filebrowser config set --port 8080
-    filebrowser config set --root /workspace
-    filebrowser config set --auth.method=json
-    filebrowser users add admin adminadmin12 --perm.admin
-else
-    echo "Using existing FileBrowser configuration..."
-fi
-
-# Start FileBrowser
-echo "Starting FileBrowser on port 8080..."
-nohup filebrowser &> /filebrowser.log &
+setup_code_server
 
 # Create default comfyui_args.txt if it doesn't exist
 ARGS_FILE="/workspace/runpod-slim/comfyui_args.txt"
@@ -445,6 +450,7 @@ if [ ! -d "$COMFYUI_DIR" ] || [ ! -d "$VENV_DIR" ]; then
         "https://github.com/rgthree/rgthree-comfy"
         "https://github.com/cubiq/ComfyUI_essentials"
         "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+        "https://github.com/chrisgoringe/cg-use-everywhere"
     )
 
     for repo in "${CUSTOM_NODES[@]}"; do

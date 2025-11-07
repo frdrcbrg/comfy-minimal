@@ -16,7 +16,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Added `rgthree-comfy` (rgthree) - Quality of life improvements and workflow enhancements
 - Added `ComfyUI_essentials` (cubiq) - Essential utility nodes
 - Added `ComfyUI-Impact-Subpack` (ltdrdata) - Additional impact pack components
-- Total of 7 custom nodes now installed automatically on first run
+- Added `cg-use-everywhere` (chrisgoringe) - Use any output anywhere
+- Added `ComfyUI_UltimateSDUpscale` (ssitu) - Advanced upscaling workflows
+- Added `ComfyUI-Inpaint-CropAndStitch` (lquesada) - Crop and stitch inpainting
+- Added `ComfyUI-GlifNodes` (glifxyz) - Glif.app integration nodes
+- Total of 11 custom nodes now installed automatically on first run
 
 **User Experience Improvements**
 - Added informative startup banner showing:
@@ -156,6 +160,9 @@ Both `start.sh` and `start.5090.sh` execute on container start:
 - ComfyUI_essentials (cubiq)
 - ComfyUI-Impact-Subpack (ltdrdata)
 - cg-use-everywhere (chrisgoringe)
+- ComfyUI_UltimateSDUpscale (ssitu)
+- ComfyUI-Inpaint-CropAndStitch (lquesada)
+- ComfyUI-GlifNodes (glifxyz)
 
 Managed in the `CUSTOM_NODES` array in start scripts.
 

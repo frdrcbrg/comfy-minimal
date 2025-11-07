@@ -28,6 +28,9 @@ A compact and optimized Docker container designed as an easy-to-use RunPod templ
   - ComfyUI_essentials
   - ComfyUI-Impact-Subpack
   - cg-use-everywhere
+  - ComfyUI_UltimateSDUpscale
+  - ComfyUI-Inpaint-CropAndStitch
+  - ComfyUI-GlifNodes
 - Performance optimizations:
   - UV package installer for faster dependency installation
   - NVENC support in FFmpeg

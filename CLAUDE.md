@@ -221,10 +221,11 @@ Features:
 Auto-download configuration (`/workspace/civitai_models.txt`):
 ```text
 # Format: MODEL_ID CATEGORY
-# Example:
-123456 checkpoints
-789012 loras
-456789 controlnet
+# Uncomment to auto-download DMD2 Speed LoRA (fast 4-10 step generation)
+# 1608870 loras
+#
+# Add your models below:
+
 ```
 
 The `auto_download_civitai_models()` function:

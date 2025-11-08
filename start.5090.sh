@@ -232,9 +232,11 @@ auto_download_civitai_models() {
 # CivitAI Model Auto-Download List
 # Add one model per line in the format: MODEL_ID CATEGORY
 # Categories: checkpoints, loras, vae, embeddings, controlnet, upscale_models
-# Example:
-# 123456 checkpoints
-# 789012 loras
+#
+# Uncomment the line below to auto-download DMD2 Speed LoRA (fast 4-10 step generation)
+# 1608870 loras
+#
+# Add your models below:
 
 MODELLIST
         return

@@ -143,10 +143,12 @@ The container can automatically download models from CivitAI when it starts. Sim
 # CivitAI Model Auto-Download List
 # Format: MODEL_ID CATEGORY
 # Categories: checkpoints, loras, vae, embeddings, controlnet, upscale_models
+#
+# Uncomment to auto-download DMD2 Speed LoRA (fast 4-10 step generation)
+# 1608870 loras
+#
+# Add your models below:
 
-123456 checkpoints
-789012 loras
-456789 controlnet
 ```
 
 **Features:**

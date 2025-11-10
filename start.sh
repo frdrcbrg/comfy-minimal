@@ -3,6 +3,8 @@ set -e  # Exit the script if any statement returns a non-true return value
 
 COMFYUI_DIR="/workspace/runpod-slim/ComfyUI"
 VENV_DIR="$COMFYUI_DIR/.venv"
+KOHYA_DIR="/workspace/runpod-slim/kohya_ss"
+KOHYA_VENV_DIR="$KOHYA_DIR/.venv"
 
 # ---------------------------------------------------------------------------- #
 #                          Function Definitions                                  #
@@ -221,6 +223,46 @@ setup_workflow_symlinks() {
     echo "Workflow storage symlink configured successfully"
 }
 
+# Setup persistent Kohya storage with symlinks
+setup_kohya_storage() {
+    echo "Setting up Kohya persistent storage..."
+
+    # Create persistent directories
+    mkdir -p /workspace/kohya_outputs
+    mkdir -p /workspace/kohya_configs
+    mkdir -p /workspace/training_data
+    mkdir -p /workspace/kohya_logs
+
+    # Only create symlinks if Kohya is installed
+    if [ -d "$KOHYA_DIR" ]; then
+        # Create output directory in Kohya if it doesn't exist
+        mkdir -p "$KOHYA_DIR/outputs"
+        mkdir -p "$KOHYA_DIR/configs"
+        mkdir -p "$KOHYA_DIR/training_data"
+
+        # Backup existing directories if they exist and are not symlinks
+        for dir in outputs configs training_data; do
+            if [ -d "$KOHYA_DIR/$dir" ] && [ ! -L "$KOHYA_DIR/$dir" ]; then
+                echo "Backing up existing $dir directory..."
+                mv "$KOHYA_DIR/$dir" "$KOHYA_DIR/${dir}.bak"
+            elif [ -L "$KOHYA_DIR/$dir" ] && [ ! -e "$KOHYA_DIR/$dir" ]; then
+                # Remove broken symlink
+                rm "$KOHYA_DIR/$dir"
+            fi
+        done
+
+        # Create symlinks
+        ln -sf /workspace/kohya_outputs "$KOHYA_DIR/outputs"
+        ln -sf /workspace/kohya_configs "$KOHYA_DIR/configs"
+        ln -sf /workspace/training_data "$KOHYA_DIR/training_data"
+
+        echo "Kohya storage symlinks created:"
+        echo "  $KOHYA_DIR/outputs -> /workspace/kohya_outputs"
+        echo "  $KOHYA_DIR/configs -> /workspace/kohya_configs"
+        echo "  $KOHYA_DIR/training_data -> /workspace/training_data"
+    fi
+}
+
 # Auto-download models from CivitAI based on model list
 auto_download_civitai_models() {
     MODELS_LIST="/workspace/civitai_models.txt"
@@ -349,6 +391,33 @@ MODELLIST
     echo "Hugging Face auto-download complete"
 }
 
+# Start Kohya_ss in background
+start_kohya() {
+    if [ -d "$KOHYA_DIR" ] && [ -d "$KOHYA_VENV_DIR" ]; then
+        echo "Starting Kohya_ss on port 7860..."
+        cd $KOHYA_DIR
+        source $KOHYA_VENV_DIR/bin/activate
+
+        # Check if kohya_gui.py exists
+        if [ -f "kohya_gui.py" ]; then
+            nohup python kohya_gui.py --listen 0.0.0.0 --server_port 7860 \
+                > /workspace/runpod-slim/kohya.log 2>&1 &
+            echo "Kohya_ss started successfully (PID: $!)"
+        elif [ -f "gui.py" ]; then
+            nohup python gui.py --listen 0.0.0.0 --server_port 7860 \
+                > /workspace/runpod-slim/kohya.log 2>&1 &
+            echo "Kohya_ss started successfully (PID: $!)"
+        else
+            echo "Warning: Could not find kohya_gui.py or gui.py"
+        fi
+
+        # Wait a moment for Kohya to start
+        sleep 2
+    else
+        echo "Kohya_ss not installed, skipping..."
+    fi
+}
+
 # Display startup banner with system information
 print_banner() {
     local container_ip=$(hostname -I | awk '{print $1}')
@@ -373,7 +442,7 @@ print_banner() {
     echo "╔════════════════════════════════════════════════════════════════════════╗"
     echo "║                                                                        ║"
     echo "║                          COMFY MINIMAL                                 ║"
-    echo "║                    ComfyUI + Essential Tools                           ║"
+    echo "║              ComfyUI + Kohya_ss + Essential Tools                      ║"
     echo "║                                                                        ║"
     echo "╚════════════════════════════════════════════════════════════════════════╝"
     echo ""
@@ -384,6 +453,7 @@ print_banner() {
     echo ""
     echo "🌐 SERVICES & PORTS"
     echo "   ComfyUI      : http://$container_ip:8188"
+    echo "   Kohya_ss     : http://$container_ip:7860"
     echo "   code-server  : http://$container_ip:8080"
     echo "   SSH          : ssh root@$container_ip (port 22)"
     echo ""
@@ -396,14 +466,17 @@ print_banner() {
     echo "   Models       : /workspace/models/"
     echo "   Workflows    : /workspace/workflows/"
     echo "   ComfyUI      : /workspace/runpod-slim/ComfyUI/"
+    echo "   Kohya Outputs: /workspace/kohya_outputs/"
+    echo "   Training Data: /workspace/training_data/"
     echo ""
     echo "📚 USEFUL COMMANDS"
     echo "   Download from CivitAI    : civitdl <model_id> /workspace/models/checkpoints"
     echo "   Download from HuggingFace: huggingface-cli download <repo> --local-dir /workspace/models"
     echo "   View ComfyUI logs        : tail -f /workspace/runpod-slim/comfyui.log"
+    echo "   View Kohya logs          : tail -f /workspace/runpod-slim/kohya.log"
     echo ""
     echo "────────────────────────────────────────────────────────────────────────"
-    echo "🚀 Starting ComfyUI... (logs will appear below)"
+    echo "🚀 Kohya running on port 7860 | ComfyUI starting... (logs below)"
     echo "────────────────────────────────────────────────────────────────────────"
     echo ""
 }
@@ -550,17 +623,80 @@ else
     done
 fi
 
+# Setup Kohya_ss if needed
+if [ ! -d "$KOHYA_DIR" ] || [ ! -d "$KOHYA_VENV_DIR" ]; then
+    echo "First time setup: Installing Kohya_ss..."
+
+    # Clone Kohya_ss if not present
+    if [ ! -d "$KOHYA_DIR" ]; then
+        cd /workspace/runpod-slim
+        echo "Cloning Kohya_ss repository..."
+        git clone https://github.com/bmaltais/kohya_ss.git
+    fi
+
+    # Create and setup virtual environment if not present
+    if [ ! -d "$KOHYA_VENV_DIR" ]; then
+        cd $KOHYA_DIR
+        echo "Creating Python 3.12 virtual environment for Kohya..."
+        python3.12 -m venv $KOHYA_VENV_DIR
+        source $KOHYA_VENV_DIR/bin/activate
+
+        # Use pip first to install uv
+        pip install -U pip
+        pip install uv
+
+        # Configure uv to use copy instead of hardlinks
+        export UV_LINK_MODE=copy
+
+        # Check if Kohya has a setup script
+        if [ -f "setup.sh" ]; then
+            echo "Running Kohya setup.sh..."
+            # Modify setup.sh to use uv if it uses pip directly
+            sed -i 's/pip install /uv pip install --no-cache /g' setup.sh
+            bash setup.sh
+        elif [ -f "requirements.txt" ]; then
+            echo "Installing Kohya requirements.txt..."
+            uv pip install --no-cache -r requirements.txt
+        else
+            echo "Warning: No setup.sh or requirements.txt found in Kohya directory"
+        fi
+
+        # Install additional dependencies commonly needed for Kohya
+        echo "Installing additional Kohya dependencies..."
+        uv pip install --no-cache torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+        uv pip install --no-cache accelerate transformers diffusers bitsandbytes tensorboard gradio
+
+        echo "Kohya_ss installation complete"
+    fi
+else
+    echo "Kohya_ss already installed, activating environment..."
+    source $KOHYA_VENV_DIR/bin/activate
+
+    # Optional: Update dependencies on restart
+    # echo "Updating Kohya dependencies..."
+    # cd $KOHYA_DIR
+    # if [ -f "requirements.txt" ]; then
+    #     uv pip install --no-cache -r requirements.txt
+    # fi
+fi
+
 # Setup persistent model storage with symlinks
 setup_model_symlinks
 
 # Setup persistent workflow storage with symlinks
 setup_workflow_symlinks
 
+# Setup persistent Kohya storage with symlinks
+setup_kohya_storage
+
 # Auto-download CivitAI models if configured
 auto_download_civitai_models
 
 # Auto-download Hugging Face models if configured
 auto_download_huggingface_models
+
+# Start Kohya in background
+start_kohya
 
 # Display startup banner
 print_banner

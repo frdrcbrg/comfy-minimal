@@ -4,6 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Recent Changes (Latest Session)
 
+**Kohya_ss Integration**
+- Added Kohya_ss (Stable Diffusion training toolkit) alongside ComfyUI
+- Exposed on port 7860 with Gradio UI
+- Separate Python 3.12 venv at `/workspace/runpod-slim/kohya_ss/.venv`
+- Persistent storage for training data, outputs, and configs in `/workspace/`
+- Shared model access with ComfyUI via `/workspace/models/`
+- Supports LoRA training, Dreambooth, and model fine-tuning
+
 **Docker Build Optimization (BREAKING CHANGE)**
 - Consolidated `Dockerfile` and `Dockerfile.5090` into single unified `Dockerfile`
 - Added build arguments: `CUDA_VERSION` (12-4 or 12-8) and `START_SCRIPT`
@@ -169,6 +177,7 @@ Managed in the `CUSTOM_NODES` array in start scripts.
 ### Exposed Ports
 
 - 8188: ComfyUI web interface
+- 7860: Kohya_ss training interface
 - 8080: code-server (VS Code in browser)
 - 22: SSH access
 
@@ -355,13 +364,18 @@ Recognized at runtime:
   - `style_models/` - Style models
   - `unet/` - UNet models
 - `/workspace/workflows/`: **Persistent workflow storage** - Symlinked to ComfyUI's workflows directory
+- `/workspace/kohya_outputs/`: **Persistent Kohya training outputs** - Trained models, samples
+- `/workspace/kohya_configs/`: **Persistent Kohya training configs** - Training configuration files
+- `/workspace/training_data/`: **Persistent training datasets** - Images, captions, datasets
 - `/workspace/civitai_models.txt`: **CivitAI auto-download configuration** - List of CivitAI model IDs to download on startup
 - `/workspace/huggingface_models.txt`: **Hugging Face auto-download configuration** - List of HF repository IDs to download on startup
 - `/workspace/runpod-slim/ComfyUI`: ComfyUI installation and venv
+- `/workspace/runpod-slim/kohya_ss`: Kohya_ss installation and venv
 - `/workspace/runpod-slim/ComfyUI/models/`: Symlinked to `/workspace/models/` subdirectories
 - `/workspace/runpod-slim/ComfyUI/user/default/workflows/`: Symlinked to `/workspace/workflows/`
 - `/workspace/runpod-slim/comfyui_args.txt`: Custom startup arguments
 - `/workspace/runpod-slim/comfyui.log`: ComfyUI stdout/stderr
+- `/workspace/runpod-slim/kohya.log`: Kohya_ss stdout/stderr
 - `/workspace/runpod-slim/code-server.log`: code-server stdout/stderr
 
 ## Persistent Model Storage
@@ -408,6 +422,50 @@ The `setup_workflow_symlinks()` function in start scripts:
 
 This is essential for RunPod deployments where `/workspace` is mounted as persistent storage, ensuring your workflows are never lost across container restarts.
 
+## Kohya_ss Training Toolkit
+
+The container includes Kohya_ss, a popular Stable Diffusion training toolkit with Gradio UI for:
+- LoRA training
+- Dreambooth training
+- Fine-tuning Stable Diffusion models
+- Captioning and dataset preparation
+
+### Access
+
+- **URL**: `http://<container-ip>:7860`
+- **Logs**: `/workspace/runpod-slim/kohya.log`
+- **Installation**: `/workspace/runpod-slim/kohya_ss`
+
+### Persistent Storage
+
+Kohya is configured with persistent storage for training workflows:
+
+- **Training outputs** (trained models, samples): `/workspace/kohya_outputs/`
+- **Training configs** (toml files): `/workspace/kohya_configs/`
+- **Training datasets** (images, captions): `/workspace/training_data/`
+- **Model access**: Shares `/workspace/models/` with ComfyUI for checkpoints, LoRAs, VAEs
+
+Symlinks connect these persistent directories to Kohya's working directories, ensuring:
+- Training outputs survive container restarts
+- Datasets persist across sessions
+- Configs can be reused for reproducible training
+
+### Workflow Example
+
+1. **Prepare dataset**: Upload images to `/workspace/training_data/my_dataset/`
+2. **Configure training**: Use Kohya UI at port 7860, save config to `/workspace/kohya_configs/`
+3. **Train model**: Start training in UI, outputs save to `/workspace/kohya_outputs/`
+4. **Use in ComfyUI**: Trained LoRAs automatically available in ComfyUI via shared models directory
+
+### Python Environment
+
+- **Python version**: 3.12 (shared with ComfyUI)
+- **Virtual environment**: `/workspace/runpod-slim/kohya_ss/.venv` (regular) or same for 5090 variant
+- **Package manager**: `uv` for fast installs
+- **PyTorch**: CUDA 12.4 (regular) or CUDA 12.8 (RTX 5090 variant)
+
+The `setup_kohya_storage()` function in start scripts handles all symlink creation and persistence automatically on container startup.
+
 ## Development Conventions
 
 - Keep images lean: prefer runtime installs via `uv` over baking large wheels
@@ -420,5 +478,8 @@ This is essential for RunPod deployments where `/workspace` is mounted as persis
 ## Troubleshooting
 
 - **ComfyUI not reachable**: Check `/workspace/runpod-slim/comfyui.log`, verify `comfyui_args.txt` doesn't contain invalid flags
+- **Kohya not reachable**: Check `/workspace/runpod-slim/kohya.log`, verify port 7860 is mapped, ensure training isn't consuming all GPU memory
+- **Out of memory during training**: Reduce batch size in Kohya UI, close ComfyUI temporarily, or use gradient checkpointing
+- **Can't find trained models in ComfyUI**: Check `/workspace/kohya_outputs/` for LoRA files, manually move to `/workspace/models/loras/` if needed
 - **SSH access**: Check container logs for generated password if `PUBLIC_KEY` not provided, ensure port 22 is mapped
 - **GPU issues on 5090**: Verify you're running the `-5090` tag, confirm driver compatibility with cu128 wheels

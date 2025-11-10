@@ -15,6 +15,7 @@ A compact and optimized Docker container designed as an easy-to-use RunPod templ
   - Regular: CUDA 12.4 with stable PyTorch
   - RTX 5090: CUDA 12.8 with PyTorch Nightly (optimized for latest NVIDIA GPUs)
 - Built-in tools:
+  - Kohya_ss for LoRA and model training
   - code-server (VS Code in the browser)
   - SSH access
   - civitdl for batch downloading models from CivitAI
@@ -42,6 +43,7 @@ A compact and optimized Docker container designed as an easy-to-use RunPod templ
 ## Ports
 
 - `8188`: ComfyUI web interface
+- `7860`: Kohya_ss training interface
 - `8080`: code-server (VS Code in browser)
 - `22`: SSH access
 
@@ -59,7 +61,7 @@ The images are automatically built and published via GitHub Actions on every pus
 ### Local Development
 
 ```bash
-docker run --rm -p 8188:8188 -p 8080:8080 -p 2222:22 \
+docker run --rm -p 8188:8188 -p 7860:7860 -p 8080:8080 -p 2222:22 \
   -e PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" \
   -e CODE_SERVER_PASSWORD=your_code_server_password \
   -e CIVITAI_API_KEY=your_api_key_here \

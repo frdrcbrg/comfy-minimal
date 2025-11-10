@@ -568,7 +568,7 @@ if [ ! -d "$COMFYUI_DIR" ] || [ ! -d "$VENV_DIR" ]; then
         
         # Install dependencies for custom nodes
         echo "Installing/updating dependencies for custom nodes..."
-        uv pip install --no-cache GitPython numpy pillow opencv-python torchsde  # Common dependencies
+        uv pip install --no-cache GitPython numpy pillow opencv-python torchsde PyYAML  # Common dependencies
         
         # Install dependencies for all custom nodes
         cd "$COMFYUI_DIR/custom_nodes"
@@ -603,7 +603,7 @@ else
     
     # Always install/update dependencies for custom nodes
     echo "Installing/updating dependencies for custom nodes..."
-    uv pip install --no-cache GitPython numpy pillow  # Common dependencies
+    uv pip install --no-cache GitPython numpy pillow PyYAML  # Common dependencies
     
     # Install dependencies for all custom nodes
     cd "$COMFYUI_DIR/custom_nodes"

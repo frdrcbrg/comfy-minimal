@@ -502,7 +502,7 @@ if [ ! -d "$COMFYUI_DIR" ] || [ ! -d "$VENV_DIR" ]; then
 
         # Install dependencies for custom nodes
         echo "Installing/updating dependencies for custom nodes..."
-        uv pip install --no-cache GitPython numpy pillow opencv-python scikit-image onnx torchsde  # Common dependencies
+        uv pip install --no-cache GitPython numpy pillow opencv-python scikit-image onnx dill torchsde  # Common dependencies
         # Install sageattention separately after torch is available (requires torch for build, use --no-build-isolation)
         uv pip install --no-cache --no-build-isolation sageattention || echo "Warning: sageattention installation failed, continuing..."
         
@@ -539,7 +539,7 @@ else
     
     # Always install/update dependencies for custom nodes
     echo "Installing/updating dependencies for custom nodes..."
-    uv pip install --no-cache GitPython numpy pillow opencv-python scikit-image onnx  # Common dependencies
+    uv pip install --no-cache GitPython numpy pillow opencv-python scikit-image onnx dill  # Common dependencies
     # Install sageattention separately after torch is available (requires torch for build, use --no-build-isolation)
     uv pip install --no-cache --no-build-isolation sageattention || echo "Warning: sageattention installation failed, continuing..."
     

@@ -153,6 +153,11 @@ setup_model_symlinks() {
         "clip_vision"
         "style_models"
         "unet"
+        "diffusion_models"
+        "text_encoders"
+        "gligen"
+        "photomaker"
+        "insightface"
     )
 
     # Create persistent directories and symlink them

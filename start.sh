@@ -457,6 +457,7 @@ if [ ! -d "$COMFYUI_DIR" ] || [ ! -d "$VENV_DIR" ]; then
         "https://github.com/lquesada/ComfyUI-Inpaint-CropAndStitch"
         "https://github.com/glifxyz/ComfyUI-GlifNodes"
         "https://github.com/girish-k/comfyui-image-saver"
+        "https://github.com/kijai/ComfyUI-WanVideoWrapper"
     )
 
     for repo in "${CUSTOM_NODES[@]}"; do

@@ -588,6 +588,11 @@ print_banner
 
 # Start ComfyUI with custom arguments if provided
 cd $COMFYUI_DIR
+
+# Ensure CUDA environment variables are set for ComfyUI
+export PATH=/usr/local/cuda/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH:-}
+
 FIXED_ARGS="--listen 0.0.0.0 --port 8188"
 if [ -s "$ARGS_FILE" ]; then
     # File exists and is not empty, combine fixed args with custom args
